@@ -18,8 +18,12 @@ async function fetchRailStatus(endpoint, params) {
   if (window.location.protocol === 'file:') throw new Error('Local preview has no live API');
   const query = new URLSearchParams(params);
   const response = await fetch(`${endpoint}?${query}`);
-  if (!response.ok) throw new Error('Railway service unavailable');
-  return response.json();
+  const contentType = response.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await response.json().catch(() => ({}))
+    : { message: await response.text() };
+  if (!response.ok) throw new Error(data.error || data.message || `Railway service unavailable (HTTP ${response.status})`);
+  return data;
 }
 
 function checkPNR(event) {
@@ -42,9 +46,16 @@ function checkRunningStatus(event) {
   const result = document.getElementById('runningResult');
   result.innerHTML = '<span class="loading-text">Finding the train...</span>';
   fetchRailStatus(LIVE_RAIL_API.running, { trainNumber, date }).then(data => {
-    result.innerHTML = `<strong>${data.status || 'Running on schedule'}</strong><span>${data.currentStation || 'Current location unavailable'}${data.delay ? ` · ${data.delay} delay` : ''}</span>`;
-  }).catch(() => {
-    result.innerHTML = `<strong>Demo result: Train ${trainNumber} is running</strong><span>Live location will appear after the railway API is connected.</span><small>Demo data only · Journey date ${date}</small>`;
+    const station = data.currentStation ? `${data.currentStation}${data.currentStationCode ? ` (${data.currentStationCode})` : ''}` : 'Current location unavailable';
+    const delay = data.delay ? ` · Delay: ${data.delay}${/^\d+$/.test(String(data.delay)) ? ' minutes' : ''}` : '';
+    const updated = data.lastUpdated ? `Updated: ${data.lastUpdated}` : `Journey date: ${date}`;
+    result.innerHTML = `<strong>${data.trainName ? `${data.trainName} · ` : ''}${data.status || 'Running status received'}</strong><span>${station}${delay}</span><small>${updated}</small>`;
+  }).catch(error => {
+    const message = error.message || 'The railway service could not be reached.';
+    const setupHint = message.toLowerCase().includes('api key')
+      ? 'Add INDIAN_RAIL_API_KEY to .env and restart the backend.'
+      : 'Check the train number, date, server and railway provider availability.';
+    result.innerHTML = `<strong>Running status unavailable</strong><span>${message}</span><small>${setupHint}</small>`;
   });
 }
 
@@ -249,6 +260,90 @@ const bookingState = {
   netBank: 'HDFC',
   upiMethod: 'Google Pay'
 };
+
+const hotelBookingState = {
+  hotel: null,
+  city: '',
+  checkIn: '',
+  checkOut: '',
+  guests: 2,
+  rooms: 1,
+  guestName: '',
+  mobile: '',
+  email: '',
+  request: '',
+  paymentMethod: 'UPI'
+};
+
+function startHotelBooking(index, city) {
+  const hotel = getHotelsForCity(city)[index];
+  hotelBookingState.hotel = hotel;
+  hotelBookingState.city = city;
+  hotelBookingState.checkIn = document.getElementById('hotelCheckIn').value;
+  hotelBookingState.checkOut = document.getElementById('hotelCheckOut').value;
+  hotelBookingState.guests = Number(document.getElementById('guestCount').textContent) || 2;
+  hotelBookingState.rooms = Number(document.getElementById('roomCount').textContent) || 1;
+  document.getElementById('hotelBookingOverlay').style.display = 'flex';
+  renderHotelBooking();
+}
+
+function renderHotelBooking() {
+  const state = hotelBookingState;
+  const hotel = state.hotel;
+  if (!hotel) return;
+  document.getElementById('hotelBookingName').textContent = hotel.name;
+  document.getElementById('hotelBookingLocation').textContent = hotel.location;
+  document.getElementById('hotelBookingImage').src = hotel.image;
+  document.getElementById('hotelBookingCheckIn').textContent = state.checkIn;
+  document.getElementById('hotelBookingCheckOut').textContent = state.checkOut;
+  document.getElementById('hotelBookingGuests').textContent = `${state.guests} guests, ${state.rooms} room${state.rooms > 1 ? 's' : ''}`;
+  document.getElementById('hotelGuestName').value = state.guestName;
+  document.getElementById('hotelGuestMobile').value = state.mobile;
+  document.getElementById('hotelGuestEmail').value = state.email;
+  document.getElementById('hotelSpecialRequest').value = state.request;
+  document.getElementById('hotelPaymentMethod').value = state.paymentMethod;
+}
+
+function closeHotelBooking() {
+  document.getElementById('hotelBookingOverlay').style.display = 'none';
+}
+
+function confirmHotelBooking(event) {
+  event.preventDefault();
+  const state = hotelBookingState;
+  state.guestName = document.getElementById('hotelGuestName').value.trim();
+  state.mobile = document.getElementById('hotelGuestMobile').value.trim();
+  state.email = document.getElementById('hotelGuestEmail').value.trim();
+  state.request = document.getElementById('hotelSpecialRequest').value.trim();
+  state.paymentMethod = document.getElementById('hotelPaymentMethod').value;
+  if (new Date(state.checkOut) <= new Date(state.checkIn)) {
+    alert('Check-out date must be after check-in date.');
+    return;
+  }
+  if (!document.getElementById('hotelAcceptTerms').checked) {
+    alert('Please accept the hotel booking terms and cancellation policy.');
+    return;
+  }
+  const nights = Math.max(1, Math.ceil((new Date(state.checkOut) - new Date(state.checkIn)) / 86400000));
+  const nightlyFare = Number(state.hotel.price.replace(/[^0-9]/g, ''));
+  bookingState.bookingType = 'hotel';
+  bookingState.confirmedTicket = {
+    ticketNumber: `CBH-${Date.now().toString().slice(-8)}`,
+    bookingType: 'hotel',
+    booking: state.hotel,
+    travelClass: `${nights} night${nights > 1 ? 's' : ''}`,
+    passengerName: state.guestName,
+    passengerAge: 'Adult',
+    passengerGender: 'Guest',
+    seatCount: state.rooms,
+    paymentText: state.paymentMethod,
+    total: nightlyFare * nights * state.rooms * 1.17,
+    stay: state
+  };
+  closeHotelBooking();
+  renderTicket();
+  saveBooking(bookingState.confirmedTicket);
+}
 
 function startSeatBooking(index) {
   const train = mockTrains[index];
@@ -464,6 +559,7 @@ function confirmBooking() {
 
 function saveBooking(ticket) {
   const booking = ticket.booking;
+  const route = ticket.bookingType === 'hotel' ? booking.location : `${booking.from} → ${booking.to}`;
   fetch('/api/bookings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -471,7 +567,7 @@ function saveBooking(ticket) {
       ticketNumber: ticket.ticketNumber,
       bookingType: ticket.bookingType,
       passengerName: ticket.passengerName,
-      route: `${booking.from} → ${booking.to}`,
+      route,
       booking: ticket
     })
   }).catch(() => {
@@ -493,12 +589,13 @@ function renderTicket() {
   const ticket = bookingState.confirmedTicket;
   if (!ticket) return;
   const booking = ticket.booking;
+  const isHotel = ticket.bookingType === 'hotel';
   document.getElementById('ticketNumber').textContent = ticket.ticketNumber;
-  document.getElementById('ticketType').textContent = ticket.bookingType === 'flight' ? 'Flight ticket' : 'Train ticket';
-  document.getElementById('ticketOperator').textContent = ticket.bookingType === 'flight' ? `${booking.airline} ${booking.number}` : `${booking.name} #${booking.number}`;
-  document.getElementById('ticketRoute').textContent = `${booking.from} → ${booking.to}`;
+  document.getElementById('ticketType').textContent = isHotel ? 'Hotel booking' : ticket.bookingType === 'flight' ? 'Flight ticket' : 'Train ticket';
+  document.getElementById('ticketOperator').textContent = isHotel ? booking.name : ticket.bookingType === 'flight' ? `${booking.airline} ${booking.number}` : `${booking.name} #${booking.number}`;
+  document.getElementById('ticketRoute').textContent = isHotel ? booking.location : `${booking.from} → ${booking.to}`;
   document.getElementById('ticketClass').textContent = ticket.travelClass;
-  document.getElementById('ticketPassenger').textContent = `${ticket.passengerName} (${ticket.passengerAge}, ${ticket.passengerGender})`;
+  document.getElementById('ticketPassenger').textContent = isHotel ? `${ticket.passengerName} · ${ticket.stay.mobile}` : `${ticket.passengerName} (${ticket.passengerAge}, ${ticket.passengerGender})`;
   document.getElementById('ticketTravellers').textContent = ticket.seatCount;
   document.getElementById('ticketPayment').textContent = ticket.paymentText;
   document.getElementById('ticketTotal').textContent = `₹${ticket.total}`;
@@ -513,8 +610,11 @@ function downloadTicket() {
   const ticket = bookingState.confirmedTicket;
   if (!ticket) return;
   const booking = ticket.booking;
-  const ticketType = ticket.bookingType === 'flight' ? 'Flight' : 'Train';
-  const ticketHtml = `<!doctype html><html><head><meta charset="UTF-8"><title>${ticketType} Ticket ${ticket.ticketNumber}</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#0f172a}main{max-width:680px;margin:auto;border:1px solid #dbeafe;border-radius:16px;padding:24px}h1{color:#2563eb}p{padding:8px 0;border-bottom:1px solid #e2e8f0}</style></head><body><main><h1>Cheap &amp; Best Trip</h1><p><strong>${ticketType}:</strong> ${ticket.ticketNumber}</p><p><strong>Operator:</strong> ${ticket.bookingType === 'flight' ? booking.airline + ' ' + booking.number : booking.name + ' #' + booking.number}</p><p><strong>Route:</strong> ${booking.from} &rarr; ${booking.to}</p><p><strong>Passenger:</strong> ${ticket.passengerName}</p><p><strong>Class:</strong> ${ticket.travelClass}</p><p><strong>Travellers:</strong> ${ticket.seatCount}</p><p><strong>Payment:</strong> ${ticket.paymentText}</p><p><strong>Total paid:</strong> ₹${ticket.total}</p></main></body></html>`;
+  const isHotel = ticket.bookingType === 'hotel';
+  const ticketType = isHotel ? 'Hotel' : ticket.bookingType === 'flight' ? 'Flight' : 'Train';
+  const journey = isHotel ? `${ticket.stay.checkIn} to ${ticket.stay.checkOut}` : `${booking.from} &rarr; ${booking.to}`;
+  const operator = isHotel ? `${booking.name} · ${booking.location}` : ticket.bookingType === 'flight' ? booking.airline + ' ' + booking.number : booking.name + ' #' + booking.number;
+  const ticketHtml = `<!doctype html><html><head><meta charset="UTF-8"><title>${ticketType} Ticket ${ticket.ticketNumber}</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#0f172a}main{max-width:680px;margin:auto;border:1px solid #dbeafe;border-radius:16px;padding:24px}h1{color:#2563eb}p{padding:8px 0;border-bottom:1px solid #e2e8f0}</style></head><body><main><h1>Cheap &amp; Best Trip</h1><p><strong>${ticketType}:</strong> ${ticket.ticketNumber}</p><p><strong>Booking:</strong> ${operator}</p><p><strong>Travel / stay:</strong> ${journey}</p><p><strong>Guest:</strong> ${ticket.passengerName}</p><p><strong>Plan:</strong> ${ticket.travelClass}</p><p><strong>Rooms / travellers:</strong> ${ticket.seatCount}</p><p><strong>Payment:</strong> ${ticket.paymentText}</p><p><strong>Total paid:</strong> ₹${Math.round(ticket.total)}</p></main></body></html>`;
   const blob = new Blob([ticketHtml], { type: 'text/html' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -691,6 +791,7 @@ const mockFlights = [
     airline: 'Air India',
     number: 'AI-101',
     logo: '\u2708\uFE0F',
+    logoUrl: 'https://www.gstatic.com/flights/airline_logos/70px/AI.png',
     from: 'DEL',
     to: 'BOM',
     dep: '06:30',
@@ -703,6 +804,7 @@ const mockFlights = [
     airline: 'IndiGo',
     number: '6E-234',
     logo: '\uD83D\uDEEB',
+    logoUrl: 'https://www.gstatic.com/flights/airline_logos/70px/6E.png',
     from: 'DEL',
     to: 'BOM',
     dep: '09:15',
@@ -715,6 +817,7 @@ const mockFlights = [
     airline: 'Vistara',
     number: 'UK-856',
     logo: '\uD83D\uDEA9',
+    logoUrl: 'https://www.gstatic.com/flights/airline_logos/70px/UK.png',
     from: 'DEL',
     to: 'BOM',
     dep: '14:00',
@@ -727,6 +830,7 @@ const mockFlights = [
     airline: 'SpiceJet',
     number: 'SG-123',
     logo: '\uD83D\uDE80',
+    logoUrl: 'https://www.gstatic.com/flights/airline_logos/70px/SG.png',
     from: 'DEL',
     to: 'BOM',
     dep: '18:45',
@@ -739,6 +843,7 @@ const mockFlights = [
     airline: 'Akasa Air',
     number: 'QP-456',
     logo: '\uD83D\uDEEC',
+    logoUrl: 'https://www.gstatic.com/flights/airline_logos/70px/QP.png',
     from: 'DEL',
     to: 'BOM',
     dep: '20:30',
@@ -758,7 +863,8 @@ const mockHotels = [
     price: '\u20B918,500',
     discount: '25% OFF',
     amenities: ['Free WiFi', 'Pool', 'Spa', 'Gym'],
-    emoji: '\uD83C\uDFE8'
+    emoji: '\uD83C\uDFE8',
+    image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=85'
   },
   {
     name: 'The Oberoi',
@@ -768,7 +874,8 @@ const mockHotels = [
     price: '\u20B915,200',
     discount: '20% OFF',
     amenities: ['Free WiFi', 'Pool', 'Restaurant', 'Bar'],
-    emoji: '\uD83C\uDFE9'
+    emoji: '\uD83C\uDFE9',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=85'
   },
   {
     name: 'ITC Grand Central',
@@ -778,7 +885,8 @@ const mockHotels = [
     price: '\u20B99,800',
     discount: '30% OFF',
     amenities: ['Free WiFi', 'Pool', 'Business Center'],
-    emoji: '\uD83C\uDFE2'
+    emoji: '\uD83C\uDFE2',
+    image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=85'
   },
   {
     name: 'Trident Nariman Point',
@@ -788,7 +896,8 @@ const mockHotels = [
     price: '\u20B912,400',
     discount: '15% OFF',
     amenities: ['Free WiFi', 'Pool', 'Spa', 'Sea View'],
-    emoji: '\uD83C\uDF0A'
+    emoji: '\uD83C\uDF0A',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=85'
   },
   {
     name: 'FabHotel Prime',
@@ -798,7 +907,8 @@ const mockHotels = [
     price: '\u20B93,200',
     discount: '40% OFF',
     amenities: ['Free WiFi', 'AC', 'Breakfast'],
-    emoji: '\uD83D\uDECF\uFE0F'
+    emoji: '\uD83D\uDECF\uFE0F',
+    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=900&q=85'
   },
   {
     name: 'Lemon Tree Premier',
@@ -808,9 +918,36 @@ const mockHotels = [
     price: '\u20B95,600',
     discount: '35% OFF',
     amenities: ['Free WiFi', 'Pool', 'Restaurant'],
-    emoji: '\uD83C\uDF4B'
+    emoji: '\uD83C\uDF4B',
+    image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=85'
   }
 ];
+
+const hotelCityProfiles = {
+  mumbai: { name: 'Mumbai', locations: ['Colaba', 'Nariman Point', 'Parel', 'Andheri East', 'Bandra West', 'Powai'], names: ['Taj Mahal Palace', 'The Oberoi Mumbai', 'ITC Grand Central', 'Trident Nariman Point', 'FabHotel Prime Mumbai', 'Lemon Tree Premier Mumbai'] },
+  delhi: { name: 'Delhi', locations: ['Connaught Place', 'Aerocity', 'Saket', 'Karol Bagh', 'Hauz Khas', 'Dwarka'], names: ['The Imperial New Delhi', 'Andaz Delhi', 'The Leela Palace', 'Shangri-La Eros', 'Bloomrooms Janpath', 'Lemon Tree Premier Delhi'] },
+  bangalore: { name: 'Bangalore', locations: ['MG Road', 'Whitefield', 'Koramangala', 'Indiranagar', 'Hebbal', 'Electronic City'], names: ['The Oberoi Bengaluru', 'ITC Gardenia', 'Taj MG Road', 'The Leela Palace Bengaluru', 'Bloomrooms Indiranagar', 'Lemon Tree Bengaluru'] },
+  noida: { name: 'Noida', locations: ['Sector 18', 'Sector 62', 'Noida Expressway', 'Film City', 'Sector 38', 'Greater Noida'], names: ['Radisson Blu Noida', 'Crowne Plaza Noida', 'Sandal Suites Noida', 'Savoy Suites Noida', 'Ginger Noida', 'Hotel Noida Grand'] },
+  lucknow: { name: 'Lucknow', locations: ['Hazratganj', 'Gomti Nagar', 'Aliganj', 'Charbagh', 'Sushant Golf City', 'Indira Nagar'], names: ['Taj Mahal Lucknow', 'Hyatt Regency Lucknow', 'Renaissance Lucknow', 'Clarks Avadh', 'Ginger Lucknow', 'The Piccadily Lucknow'] },
+  hyderabad: { name: 'Hyderabad', locations: ['Banjara Hills', 'Hitech City', 'Gachibowli', 'Jubilee Hills', 'Begumpet', 'Secunderabad'], names: ['Taj Falaknuma Palace', 'Trident Hyderabad', 'ITC Kohenur', 'Park Hyatt Hyderabad', 'The Manohar Hyderabad', 'Lemon Tree Hyderabad'] },
+  chennai: { name: 'Chennai', locations: ['T Nagar', 'OMR', 'Adyar', 'Guindy', 'Egmore', 'Nungambakkam'], names: ['ITC Grand Chola', 'The Leela Palace Chennai', 'Taj Coromandel', 'Hyatt Regency Chennai', 'The Residency Chennai', 'Lemon Tree Chennai'] },
+  kolkata: { name: 'Kolkata', locations: ['Park Street', 'Salt Lake', 'New Town', 'Ballygunge', 'Rajarhat', 'Esplanade'], names: ['The Oberoi Grand Kolkata', 'ITC Royal Bengal', 'The Westin Kolkata', 'Taj Bengal', 'The Peerless Inn Kolkata', 'Lemon Tree Kolkata'] }
+};
+
+function getHotelsForCity(city) {
+  const key = city.toLowerCase().trim();
+  const profile = hotelCityProfiles[key] || { name: city.trim() || 'Mumbai', locations: ['City Centre', 'Central District', 'Airport Area', 'Old Town', 'Business District', 'Downtown'], names: ['Grand Central Hotel', 'City Palace Hotel', 'The Residency', 'Royal Gateway Hotel', 'Comfort Suites', 'Lemon Tree Premier'] };
+  return mockHotels.map((hotel, index) => ({
+    ...hotel,
+    name: profile.names[index],
+    location: `${profile.locations[index]}, ${profile.name}`
+  }));
+}
+
+function getAirportCode(value) {
+  const code = value.match(/\(([A-Z]{3})\)/i);
+  return code ? code[1].toUpperCase() : value.trim().slice(0, 3).toUpperCase();
+}
 
 // ============================================
 // SEARCH FUNCTIONS
@@ -874,6 +1011,8 @@ function searchFlights() {
   const btn = document.getElementById('flightSearchBtn');
   const from = document.getElementById('flightFrom').value.split('(')[0].trim();
   const to = document.getElementById('flightTo').value.split('(')[0].trim();
+  const fromCode = getAirportCode(document.getElementById('flightFrom').value);
+  const toCode = getAirportCode(document.getElementById('flightTo').value);
   const date = document.getElementById('flightDate').value;
 
   btn.classList.add('loading');
@@ -892,9 +1031,10 @@ function searchFlights() {
     resultsCount.textContent = mockFlights.length + ' flights found for ' + dateStr;
 
     flightsList.innerHTML = mockFlights.map((flight, i) => {
+      const routeFlight = { ...flight, from: fromCode, to: toCode };
       return '<div class="flight-card animate-in" style="animation-delay: ' + (i * 0.1) + 's">' +
         '<div class="flight-airline">' +
-          '<div class="airline-logo">' + flight.logo + '</div>' +
+          '<div class="airline-logo"><img src="' + flight.logoUrl + '" alt="' + flight.airline + ' logo" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';"><span class="airline-logo-fallback">' + flight.logo + '</span></div>' +
           '<div>' +
             '<div class="airline-name">' + flight.airline + '</div>' +
             '<div class="airline-number">' + flight.number + '</div>' +
@@ -902,16 +1042,16 @@ function searchFlights() {
         '</div>' +
         '<div class="flight-timeline">' +
           '<div class="flight-time-block">' +
-            '<div class="flight-time">' + flight.dep + '</div>' +
-            '<div class="flight-city">' + flight.from + '</div>' +
+            '<div class="flight-time">' + routeFlight.dep + '</div>' +
+            '<div class="flight-city">' + routeFlight.from + '</div>' +
           '</div>' +
           '<div class="flight-line">' +
             '<span class="flight-duration">' + flight.duration + '</span>' +
             '<span class="flight-stops">' + flight.stops + '</span>' +
           '</div>' +
           '<div class="flight-time-block">' +
-            '<div class="flight-time">' + flight.arr + '</div>' +
-            '<div class="flight-city">' + flight.to + '</div>' +
+            '<div class="flight-time">' + routeFlight.arr + '</div>' +
+            '<div class="flight-city">' + routeFlight.to + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="flight-price-section">' +
@@ -932,6 +1072,7 @@ function searchHotels() {
   const city = document.getElementById('hotelCity').value;
   const checkIn = document.getElementById('hotelCheckIn').value;
   const checkOut = document.getElementById('hotelCheckOut').value;
+  const cityHotels = getHotelsForCity(city);
 
   btn.classList.add('loading');
 
@@ -944,9 +1085,10 @@ function searchHotels() {
     const hotelsList = document.getElementById('hotelsList');
 
     resultsRoute.textContent = 'Hotels in ' + city;
-    resultsCount.textContent = mockHotels.length + ' properties found';
+    resultsCount.textContent = cityHotels.length + ' properties found in ' + city;
 
-    hotelsList.innerHTML = mockHotels.map((hotel, i) => {
+    hotelsList.innerHTML = cityHotels.map((hotel, i) => {
+      const safeCity = city.trim().replace(/'/g, '');
       const stars = Array(5).fill(0).map((_, idx) => {
         return '<span class="star ' + (idx < Math.floor(hotel.rating) ? '' : 'empty') + '">\u2605</span>';
       }).join('');
@@ -954,8 +1096,7 @@ function searchHotels() {
       const amenitiesHtml = hotel.amenities.map(a => '<span class="amenity-tag">' + a + '</span>').join('');
 
       return '<div class="hotel-card animate-in" style="animation-delay: ' + (i * 0.1) + 's">' +
-        '<div class="hotel-image">' +
-          hotel.emoji +
+        '<div class="hotel-image"><img src="' + hotel.image + '" alt="' + hotel.name + ' hotel" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'grid\';"><span class="hotel-image-fallback">' + hotel.emoji + '</span>' +
           '<span class="hotel-badge badge-discount">' + hotel.discount + '</span>' +
           '<span class="hotel-rating">\u2605 ' + hotel.rating + '</span>' +
         '</div>' +
@@ -966,7 +1107,7 @@ function searchHotels() {
           '<div class="hotel-amenities">' + amenitiesHtml + '</div>' +
           '<div class="hotel-footer">' +
             '<div class="hotel-price">' + hotel.price + '<span>/night</span></div>' +
-            '<button class="btn btn-primary btn-sm">View Deal</button>' +
+            '<button class="btn btn-primary btn-sm" onclick="startHotelBooking(' + i + ', \'' + safeCity + '\')">Book Now</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -982,10 +1123,29 @@ function searchHotels() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const formatDateInput = date => date.toISOString().split('T')[0];
+  const dateDefaults = [
+    ['trainDate', today],
+    ['flightDate', today],
+    ['hotelCheckIn', today],
+    ['hotelCheckOut', tomorrow]
+  ];
+  dateDefaults.forEach(([id, date]) => {
+    const input = document.getElementById(id);
+    if (input) {
+      input.value = formatDateInput(date);
+      input.min = formatDateInput(today);
+    }
+  });
+
   const runningDate = document.getElementById('runningDate');
   if (runningDate && !runningDate.value) {
-    runningDate.value = new Date().toISOString().split('T')[0];
+    runningDate.value = formatDateInput(today);
   }
+  if (runningDate) runningDate.min = formatDateInput(today);
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {

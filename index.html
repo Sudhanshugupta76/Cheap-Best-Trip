@@ -17,7 +17,7 @@
      ============================================ -->
 <nav class="navbar">
   <div class="nav-container">
-    <a href="#" class="logo">
+    <a href="index.html" target="_self" class="logo">
       <div class="logo-icon" aria-label="Cheap & Best Trip logo">
         <svg viewBox="0 0 64 64" aria-hidden="true">
           <defs>
@@ -37,7 +37,7 @@
       Cheap & Best Trip
     </a>
     <ul class="nav-links">
-      <li><a href="#" class="active">Book Ticket</a></li>
+      <li><a href="index.html" target="_self" class="active">Book Ticket</a></li>
       <li><a href="pnr.html" target="_self">PNR Status</a></li>
       <li><a href="running-status.html" target="_self">Running Status</a></li>
       <li><a href="holidays.html" target="_self">Holidays</a></li>
@@ -80,7 +80,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Date</label>
-            <input type="date" class="form-input" id="trainDate" value="2026-08-05">
+            <input type="date" class="form-input" id="trainDate" value="2026-09-15">
           </div>
           <div class="form-group">
             <label class="form-label">Class</label>
@@ -132,7 +132,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Departure</label>
-            <input type="date" class="form-input" id="flightDate" value="2026-08-05">
+            <input type="date" class="form-input" id="flightDate" value="2026-09-15">
           </div>
           <div class="form-group">
             <label class="form-label">Return (Optional)</label>
@@ -181,11 +181,11 @@
           </div>
           <div class="form-group">
             <label class="form-label">Check-in</label>
-            <input type="date" class="form-input" id="hotelCheckIn" value="2026-08-05">
+            <input type="date" class="form-input" id="hotelCheckIn" value="2026-09-15">
           </div>
           <div class="form-group">
             <label class="form-label">Check-out</label>
-            <input type="date" class="form-input" id="hotelCheckOut" value="2026-08-07">
+            <input type="date" class="form-input" id="hotelCheckOut" value="2026-09-16">
           </div>
           <div class="form-group">
             <label class="form-label">Guests</label>
@@ -760,6 +760,28 @@
       </div>
       <button type="button" class="btn btn-primary btn-lg" onclick="confirmBooking()">Pay Now</button>
     </div>
+  </div>
+</div>
+
+<div id="hotelBookingOverlay" class="booking-overlay" style="display:none">
+  <div class="booking-modal hotel-booking-modal">
+    <button class="close-btn" aria-label="Close hotel booking" onclick="closeHotelBooking()">&times;</button>
+    <div class="booking-header hotel-booking-header">
+      <img id="hotelBookingImage" src="" alt="Selected hotel">
+      <div><div class="booking-step-label">Complete your stay</div><div id="hotelBookingName" class="booking-train-name"></div><div id="hotelBookingLocation" class="booking-train-route"></div></div>
+    </div>
+    <div class="hotel-stay-summary"><span>Check-in <strong id="hotelBookingCheckIn"></strong></span><span>Check-out <strong id="hotelBookingCheckOut"></strong></span><span id="hotelBookingGuests"></span></div>
+    <form onsubmit="confirmHotelBooking(event)">
+      <div class="form-row-2 hotel-booking-fields">
+        <div class="form-group"><label class="form-label" for="hotelGuestName">Primary guest name</label><input class="form-input" id="hotelGuestName" required placeholder="Enter full name"></div>
+        <div class="form-group"><label class="form-label" for="hotelGuestMobile">Mobile number</label><input class="form-input" id="hotelGuestMobile" type="tel" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" required placeholder="10-digit mobile number"></div>
+        <div class="form-group"><label class="form-label" for="hotelGuestEmail">Email address</label><input class="form-input" id="hotelGuestEmail" type="email" required placeholder="For booking confirmation"></div>
+        <div class="form-group"><label class="form-label" for="hotelPaymentMethod">Payment method</label><select class="form-input" id="hotelPaymentMethod"><option>UPI</option><option>Net Banking</option><option>Debit Card</option><option>Credit Card</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label" for="hotelSpecialRequest">Special request (optional)</label><textarea class="form-input hotel-request" id="hotelSpecialRequest" rows="3" placeholder="Late check-in, extra bed, accessibility request..."></textarea></div>
+      <label class="checkbox-field booking-checkbox"><input type="checkbox" id="hotelAcceptTerms"> I accept the booking and cancellation policy.</label>
+      <button type="submit" class="btn btn-primary btn-lg">Confirm &amp; Pay</button>
+    </form>
   </div>
 </div>
 

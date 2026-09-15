@@ -52,6 +52,35 @@ function isValidPNR(pnr) {
   return /^[0-9]{10}$/.test(pnr);
 }
 
+function findProviderValue(value, names) {
+  if (!value || typeof value !== 'object') return '';
+  const wanted = names.map(name => name.toLowerCase());
+  for (const [key, entry] of Object.entries(value)) {
+    if (wanted.includes(key.toLowerCase()) && (typeof entry === 'string' || typeof entry === 'number')) return String(entry);
+  }
+  for (const entry of Object.values(value)) {
+    if (entry && typeof entry === 'object') {
+      const match = findProviderValue(entry, names);
+      if (match) return match;
+    }
+  }
+  return '';
+}
+
+function normalizeRunningStatus(data, trainNumber, journeyDate) {
+  return {
+    trainNumber: findProviderValue(data, ['TrainNumber', 'train_number', 'TrainNo']) || trainNumber,
+    trainName: findProviderValue(data, ['TrainName', 'train_name']),
+    status: findProviderValue(data, ['Status', 'TrainStatus', 'CurrentStatus', 'Message']) || 'Running status received',
+    currentStation: findProviderValue(data, ['CurrentStation', 'CurrentStationName', 'StationName', 'Location']),
+    currentStationCode: findProviderValue(data, ['CurrentStationCode', 'StationCode']),
+    delay: findProviderValue(data, ['Delay', 'DelayInMinutes', 'LateBy', 'LateMinutes']),
+    lastUpdated: findProviderValue(data, ['LastUpdated', 'UpdatedAt', 'UpdateTime', 'Time']),
+    journeyDate,
+    raw: data
+  };
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, database: 'sqlite', railwayApiConfigured: Boolean(process.env.INDIAN_RAIL_API_KEY) });
 });
@@ -71,7 +100,8 @@ app.get('/api/railway/pnr', async (req, res) => {
     if (!response.ok) return res.status(response.status).json(data);
     res.json(data);
   } catch (error) {
-    res.status(502).json({ error: 'Railway provider request failed.' });
+    console.error('PNR provider request failed:', error.message);
+    res.status(502).json({ error: 'Railway provider request failed. Check API key, network access and provider availability.' });
   }
 });
 
@@ -91,9 +121,10 @@ app.get('/api/railway/running', async (req, res) => {
     const data = await response.json();
     db.prepare('INSERT INTO running_checks (train_number, journey_date, response_json) VALUES (?, ?, ?)').run(trainNumber, journeyDate, JSON.stringify(data));
     if (!response.ok) return res.status(response.status).json(data);
-    res.json(data);
+    res.json(normalizeRunningStatus(data, trainNumber, journeyDate));
   } catch (error) {
-    res.status(502).json({ error: 'Railway provider request failed.' });
+    console.error('Running-status provider request failed:', error.message);
+    res.status(502).json({ error: 'Running-status provider request failed. Check API key, network access and provider availability.' });
   }
 });
 
