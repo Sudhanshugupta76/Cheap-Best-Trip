@@ -1,52 +1,38 @@
 const express = require('express');
-const Database = require('better-sqlite3');
 const dotenv = require('dotenv');
 const path = require('path');
+const fs = require('fs');
 
 const rootDir = __dirname;
 dotenv.config({ path: path.join(rootDir, '.env') });
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
-const db = new Database(path.join(rootDir, 'trip-data.sqlite'));
+const databasePath = path.join(rootDir, 'trip-data.json');
+
+function loadDatabase() {
+  try {
+    return JSON.parse(fs.readFileSync(databasePath, 'utf8'));
+  } catch (error) {
+    return { pnr_checks: [], running_checks: [], fare_checks: [], bookings: [] };
+  }
+}
+
+const db = loadDatabase();
+
+function saveDatabase() {
+  fs.writeFileSync(databasePath, JSON.stringify(db, null, 2));
+}
+
+function addRecord(collection, record) {
+  const item = { id: db[collection].length + 1, ...record, checked_at: new Date().toISOString() };
+  db[collection].push(item);
+  saveDatabase();
+  return item;
+}
 
 app.use(express.json());
 app.use(express.static(rootDir));
-
-db.pragma('journal_mode = WAL');
-db.exec(`
-  CREATE TABLE IF NOT EXISTS pnr_checks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pnr TEXT NOT NULL,
-    response_json TEXT NOT NULL,
-    checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
-  CREATE TABLE IF NOT EXISTS running_checks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    train_number TEXT NOT NULL,
-    journey_date TEXT NOT NULL,
-    response_json TEXT NOT NULL,
-    checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
-  CREATE TABLE IF NOT EXISTS fare_checks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    train_number TEXT NOT NULL,
-    station_from TEXT NOT NULL,
-    station_to TEXT NOT NULL,
-    quota TEXT NOT NULL,
-    response_json TEXT NOT NULL,
-    checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
-  CREATE TABLE IF NOT EXISTS bookings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ticket_number TEXT NOT NULL UNIQUE,
-    booking_type TEXT NOT NULL,
-    passenger_name TEXT NOT NULL,
-    route TEXT NOT NULL,
-    booking_json TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  );
-`);
 
 function isValidPNR(pnr) {
   return /^[0-9]{10}$/.test(pnr);
@@ -82,7 +68,7 @@ function normalizeRunningStatus(data, trainNumber, journeyDate) {
 }
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, database: 'sqlite', railwayApiConfigured: Boolean(process.env.INDIAN_RAIL_API_KEY) });
+  res.json({ ok: true, database: 'json-file', railwayApiConfigured: Boolean(process.env.INDIAN_RAIL_API_KEY) });
 });
 
 app.get('/api/railway/pnr', async (req, res) => {
@@ -96,7 +82,7 @@ app.get('/api/railway/pnr', async (req, res) => {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
-    db.prepare('INSERT INTO pnr_checks (pnr, response_json) VALUES (?, ?)').run(pnr, JSON.stringify(data));
+    addRecord('pnr_checks', { pnr, response_json: data });
     if (!response.ok) return res.status(response.status).json(data);
     res.json(data);
   } catch (error) {
@@ -119,7 +105,7 @@ app.get('/api/railway/running', async (req, res) => {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
-    db.prepare('INSERT INTO running_checks (train_number, journey_date, response_json) VALUES (?, ?, ?)').run(trainNumber, journeyDate, JSON.stringify(data));
+    addRecord('running_checks', { train_number: trainNumber, journey_date: journeyDate, response_json: data });
     if (!response.ok) return res.status(response.status).json(data);
     res.json(normalizeRunningStatus(data, trainNumber, journeyDate));
   } catch (error) {
@@ -143,8 +129,7 @@ app.get('/api/railway/fare', async (req, res) => {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
-    db.prepare(`INSERT INTO fare_checks (train_number, station_from, station_to, quota, response_json)
-      VALUES (?, ?, ?, ?, ?)`).run(trainNumber, stationFrom, stationTo, quota, JSON.stringify(data));
+    addRecord('fare_checks', { train_number: trainNumber, station_from: stationFrom, station_to: stationTo, quota, response_json: data });
     if (!response.ok) return res.status(response.status).json(data);
     res.json(data);
   } catch (error) {
@@ -158,20 +143,18 @@ app.post('/api/bookings', (req, res) => {
     return res.status(400).json({ error: 'ticketNumber, bookingType, passengerName and route are required.' });
   }
 
-  try {
-    db.prepare(`INSERT INTO bookings (ticket_number, booking_type, passenger_name, route, booking_json)
-      VALUES (?, ?, ?, ?, ?)`)
-      .run(ticketNumber, bookingType, passengerName, route, JSON.stringify(booking));
-    res.status(201).json({ saved: true, ticketNumber });
-  } catch (error) {
+  if (db.bookings.some(item => item.ticket_number === ticketNumber)) {
     res.status(409).json({ error: 'Booking already exists or could not be saved.' });
+    return;
   }
+  addRecord('bookings', { ticket_number: ticketNumber, booking_type: bookingType, passenger_name: passengerName, route, booking_json: booking });
+  res.status(201).json({ saved: true, ticketNumber });
 });
 
 app.get('/api/bookings/:ticketNumber', (req, res) => {
-  const row = db.prepare('SELECT * FROM bookings WHERE ticket_number = ?').get(req.params.ticketNumber);
+  const row = db.bookings.find(item => item.ticket_number === req.params.ticketNumber);
   if (!row) return res.status(404).json({ error: 'Booking not found.' });
-  res.json({ ...row, booking: JSON.parse(row.booking_json) });
+  res.json({ ...row, booking: row.booking_json });
 });
 
 app.get('*', (req, res) => {
