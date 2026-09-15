@@ -1,0 +1,704 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cheap & Best Trip - Book Train, Flight & Hotel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+<base target="_blank">
+</head>
+<body>
+
+<!-- ============================================
+     NAVIGATION
+     ============================================ -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="#" class="logo">
+      <div class="logo-icon" aria-label="Cheap & Best Trip logo">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="brandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+              <stop offset="0%" stop-color="#2563eb"/>
+              <stop offset="60%" stop-color="#1d4ed8"/>
+              <stop offset="100%" stop-color="#f97316"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="29" fill="url(#brandGradient)"/>
+          <path d="M18 42c4-8 8-13 14-13 5 0 9 3 12 8" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 25c5-6 11-9 18-9" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="42" cy="27" r="4.5" fill="#ffffff"/>
+          <circle cx="17" cy="42" r="3.5" fill="#fbbf24"/>
+        </svg>
+      </div>
+      Cheap & Best Trip
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" class="active">Book Ticket</a></li>
+      <li><a href="#">PNR Status</a></li>
+      <li><a href="#">Running Status</a></li>
+      <li><a href="#">Holidays</a></li>
+      <li><a href="#">Tourism</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="loginBtn" onclick="openLogin()">Login</button>
+      <button class="btn btn-primary" onclick="openRegister()">Register</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================
+     HERO SECTION
+     ============================================ -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Book Your Journey</h1>
+    <p>Trains, Flights & Hotels — all in one place</p>
+
+    <div class="search-card">
+      <!-- Tabs -->
+      <div class="search-tabs">
+        <button class="tab active" onclick="setTab(this, 'train')">&#128642; Trains</button>
+        <button class="tab" onclick="setTab(this, 'flight')">&#9992;&#65039; Flights</button>
+        <button class="tab" onclick="setTab(this, 'hotel')">&#127976; Hotels</button>
+      </div>
+
+      <!-- ========== TRAIN FORM ========== -->
+      <div class="search-form" id="trainForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">From</label>
+            <input type="text" class="form-input" id="trainFrom" placeholder="Enter station" value="New Delhi (NDLS)">
+          </div>
+          <button class="swap-btn" onclick="swapStations('train')" title="Swap stations">&#8644;</button>
+          <div class="form-group">
+            <label class="form-label">To</label>
+            <input type="text" class="form-input" id="trainTo" placeholder="Enter station" value="Mumbai Central (MMCT)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="trainDate" value="2026-08-05">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Class</label>
+            <select class="form-input" id="travelClass">
+              <option>All Classes</option>
+              <option>Sleeper (SL)</option>
+              <option>3rd AC (3A)</option>
+              <option>2nd AC (2A)</option>
+              <option>1st AC (1A)</option>
+              <option>Executive (EC)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quota</label>
+            <select class="form-input" id="quota">
+              <option>General</option>
+              <option>Tatkal</option>
+              <option>Ladies</option>
+              <option>Senior Citizen</option>
+              <option>Divyang</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-lg search-btn" id="trainSearchBtn" onclick="searchTrains()">
+            <span class="btn-text">Search Trains</span>
+            <span class="loading-spinner"></span>
+          </button>
+        </div>
+        <div class="quick-options">
+          <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Quick:</span>
+          <button class="quick-chip" onclick="setRoute('NDLS','CNB')">Delhi &#8594; Kanpur</button>
+          <button class="quick-chip" onclick="setRoute('NDLS','BPL')">Delhi &#8594; Bhopal</button>
+          <button class="quick-chip" onclick="setRoute('NDLS','HWH')">Delhi &#8594; Kolkata</button>
+          <button class="quick-chip" onclick="setRoute('BCT','ADI')">Mumbai &#8594; Ahmedabad</button>
+          <button class="quick-chip" onclick="setRoute('MAS','SBC')">Chennai &#8594; Bangalore</button>
+        </div>
+      </div>
+
+      <!-- ========== FLIGHT FORM ========== -->
+      <div class="search-form" id="flightForm" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">From</label>
+            <input type="text" class="form-input" id="flightFrom" placeholder="Enter city or airport" value="New Delhi (DEL)">
+          </div>
+          <button class="swap-btn" onclick="swapStations('flight')" title="Swap cities">&#8644;</button>
+          <div class="form-group">
+            <label class="form-label">To</label>
+            <input type="text" class="form-input" id="flightTo" placeholder="Enter city or airport" value="Mumbai (BOM)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Departure</label>
+            <input type="date" class="form-input" id="flightDate" value="2026-08-05">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Return (Optional)</label>
+            <input type="date" class="form-input" id="flightReturn" placeholder="One Way">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Travellers</label>
+            <select class="form-input" id="flightTravellers">
+              <option>1 Adult</option>
+              <option>2 Adults</option>
+              <option>3 Adults</option>
+              <option>1 Adult, 1 Child</option>
+              <option>2 Adults, 1 Child</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Class</label>
+            <select class="form-input" id="flightClass">
+              <option>Economy</option>
+              <option>Premium Economy</option>
+              <option>Business</option>
+              <option>First</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-lg search-btn" id="flightSearchBtn" onclick="searchFlights()">
+            <span class="btn-text">Search Flights</span>
+            <span class="loading-spinner"></span>
+          </button>
+        </div>
+        <div class="quick-options">
+          <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Popular:</span>
+          <button class="quick-chip" onclick="setRoute('DEL','BOM')">Delhi &#8594; Mumbai</button>
+          <button class="quick-chip" onclick="setRoute('DEL','BLR')">Delhi &#8594; Bangalore</button>
+          <button class="quick-chip" onclick="setRoute('BOM','MAA')">Mumbai &#8594; Chennai</button>
+          <button class="quick-chip" onclick="setRoute('DEL','GOI')">Delhi &#8594; Goa</button>
+          <button class="quick-chip" onclick="setRoute('BLR','HYD')">Bangalore &#8594; Hyderabad</button>
+        </div>
+      </div>
+
+      <!-- ========== HOTEL FORM ========== -->
+      <div class="search-form" id="hotelForm" style="display:none">
+        <div class="form-row-4">
+          <div class="form-group">
+            <label class="form-label">City / Hotel</label>
+            <input type="text" class="form-input" id="hotelCity" placeholder="Enter city or hotel name" value="Mumbai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Check-in</label>
+            <input type="date" class="form-input" id="hotelCheckIn" value="2026-08-05">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Check-out</label>
+            <input type="date" class="form-input" id="hotelCheckOut" value="2026-08-07">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Guests</label>
+            <div class="guest-counter">
+              <button onclick="updateGuests(-1)">&#8722;</button>
+              <span id="guestCount">2</span>
+              <button onclick="updateGuests(1)">+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rooms</label>
+            <div class="guest-counter">
+              <button onclick="updateRooms(-1)">&#8722;</button>
+              <span id="roomCount">1</span>
+              <button onclick="updateRooms(1)">+</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg search-btn" id="hotelSearchBtn" onclick="searchHotels()">
+            <span class="btn-text">Search Hotels</span>
+            <span class="loading-spinner"></span>
+          </button>
+        </div>
+        <div class="quick-options">
+          <span style="font-size:13px;color:var(--text-muted);font-weight:500;">Trending:</span>
+          <button class="quick-chip" onclick="setHotelCity('Mumbai')">Mumbai</button>
+          <button class="quick-chip" onclick="setHotelCity('Delhi')">Delhi</button>
+          <button class="quick-chip" onclick="setHotelCity('Goa')">Goa</button>
+          <button class="quick-chip" onclick="setHotelCity('Jaipur')">Jaipur</button>
+          <button class="quick-chip" onclick="setHotelCity('Bangalore')">Bangalore</button>
+          <button class="quick-chip" onclick="setHotelCity('Chennai')">Chennai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================
+     MAIN CONTENT
+     ============================================ -->
+<main class="main">
+
+  <!-- ========== TRAIN RESULTS ========== -->
+  <div class="results-container" id="trainResults">
+    <div class="results-header">
+      <div>
+        <div class="results-route" id="trainResultsRoute">New Delhi &#8594; Mumbai Central</div>
+        <div class="results-count" id="trainResultsCount">5 trains found for Tue, 05 Aug 2026</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">AC Only</button>
+        <button class="filter-btn">Sleeper</button>
+        <button class="filter-btn">Morning Departure</button>
+        <button class="filter-btn">Fastest</button>
+      </div>
+    </div>
+    <div id="trainsList"></div>
+  </div>
+
+  <!-- ========== FLIGHT RESULTS ========== -->
+  <div class="results-container" id="flightResults">
+    <div class="results-header">
+      <div>
+        <div class="results-route" id="flightResultsRoute">New Delhi &#8594; Mumbai</div>
+        <div class="results-count" id="flightResultsCount">5 flights found for Tue, 05 Aug 2026</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Non-stop</button>
+        <button class="filter-btn">Morning</button>
+        <button class="filter-btn">Evening</button>
+        <button class="filter-btn">Cheapest</button>
+      </div>
+    </div>
+    <div id="flightsList"></div>
+  </div>
+
+  <!-- ========== HOTEL RESULTS ========== -->
+  <div class="results-container" id="hotelResults">
+    <div class="results-header">
+      <div>
+        <div class="results-route" id="hotelResultsRoute">Hotels in Mumbai</div>
+        <div class="results-count" id="hotelResultsCount">6 properties found</div>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">5 Star</button>
+        <button class="filter-btn">4 Star</button>
+        <button class="filter-btn">Budget</button>
+        <button class="filter-btn">Best Rated</button>
+      </div>
+    </div>
+    <div class="hotel-grid" id="hotelsList"></div>
+  </div>
+
+  <!-- ========== RECENT SEARCHES ========== -->
+  <div class="section-header">
+    <h2 class="section-title">Recent Searches</h2>
+    <a href="#" class="section-link">View All &#8594;</a>
+  </div>
+  <div class="recent-list">
+    <div class="recent-item" onclick="setRoute('NDLS','HWH')">
+      <div class="recent-route">
+        <span>&#128642;</span>
+        <span>New Delhi &#8594; Howrah</span>
+        <span style="color:var(--text-muted);font-weight:400;">&#8226;</span>
+        <span style="color:var(--text-muted);font-weight:400;">3rd AC</span>
+      </div>
+      <div class="recent-date">Yesterday</div>
+    </div>
+    <div class="recent-item" onclick="setRoute('DEL','BOM')">
+      <div class="recent-route">
+        <span>&#9992;&#65039;</span>
+        <span>New Delhi &#8594; Mumbai</span>
+        <span style="color:var(--text-muted);font-weight:400;">&#8226;</span>
+        <span style="color:var(--text-muted);font-weight:400;">Economy</span>
+      </div>
+      <div class="recent-date">2 days ago</div>
+    </div>
+    <div class="recent-item" onclick="setHotelCity('Goa')">
+      <div class="recent-route">
+        <span>&#127976;</span>
+        <span>Hotels in Goa</span>
+        <span style="color:var(--text-muted);font-weight:400;">&#8226;</span>
+        <span style="color:var(--text-muted);font-weight:400;">2 Guests, 1 Room</span>
+      </div>
+      <div class="recent-date">Last week</div>
+    </div>
+  </div>
+
+  <!-- ========== POPULAR ROUTES ========== -->
+  <div class="section-header">
+    <h2 class="section-title">Popular Routes</h2>
+    <a href="#" class="section-link">Explore All &#8594;</a>
+  </div>
+  <div class="routes-grid">
+    <div class="route-card" onclick="setRoute('NDLS','BCT')">
+      <div class="route-header">
+        <div class="route-cities">
+          <span>New Delhi</span>
+          <span class="route-arrow">&#8594;</span>
+          <span>Mumbai</span>
+        </div>
+        <span class="route-badge badge-popular">Popular</span>
+      </div>
+      <div class="route-info">
+        <span>12+ Daily Trains &#8226; ~16h</span>
+        <span class="route-price">&#8377;1,200+</span>
+      </div>
+    </div>
+    <div class="route-card" onclick="setRoute('DEL','BOM')">
+      <div class="route-header">
+        <div class="route-cities">
+          <span>New Delhi</span>
+          <span class="route-arrow">&#8594;</span>
+          <span>Mumbai</span>
+        </div>
+        <span class="route-badge badge-popular">Flight</span>
+      </div>
+      <div class="route-info">
+        <span>50+ Daily Flights &#8226; ~2h</span>
+        <span class="route-price">&#8377;3,200+</span>
+      </div>
+    </div>
+    <div class="route-card" onclick="setRoute('NDLS','MAS')">
+      <div class="route-header">
+        <div class="route-cities">
+          <span>New Delhi</span>
+          <span class="route-arrow">&#8594;</span>
+          <span>Chennai</span>
+        </div>
+        <span class="route-badge badge-popular">Popular</span>
+      </div>
+      <div class="route-info">
+        <span>8+ Daily Trains &#8226; ~28h</span>
+        <span class="route-price">&#8377;2,100+</span>
+      </div>
+    </div>
+    <div class="route-card" onclick="setRoute('BCT','SBC')">
+      <div class="route-header">
+        <div class="route-cities">
+          <span>Mumbai</span>
+          <span class="route-arrow">&#8594;</span>
+          <span>Bangalore</span>
+        </div>
+        <span class="route-badge badge-popular">Popular</span>
+      </div>
+      <div class="route-info">
+        <span>6+ Daily Trains &#8226; ~20h</span>
+        <span class="route-price">&#8377;1,800+</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== FEATURES ========== -->
+  <div class="section-header">
+    <h2 class="section-title">Why Book With Us</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon blue">&#9889;</div>
+      <div class="feature-title">Lightning Fast</div>
+      <div class="feature-desc">Book tickets in under 60 seconds with our optimized booking flow</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon green">&#128274;</div>
+      <div class="feature-title">Secure Payments</div>
+      <div class="feature-desc">PCI-DSS compliant payment gateway with multiple payment options</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon purple">&#128241;</div>
+      <div class="feature-title">Mobile Ready</div>
+      <div class="feature-desc">Seamless experience across all devices with instant e-tickets</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon orange">&#127919;</div>
+      <div class="feature-title">Smart Alerts</div>
+      <div class="feature-desc">Get notified about PNR status, delays, and platform changes</div>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================
+     FOOTER
+     ============================================ -->
+<footer class="footer">
+  <div class="footer-content">
+    <div>
+      <div class="footer-title">Services</div>
+      <ul class="footer-links">
+        <li><a href="#">Book Train</a></li>
+        <li><a href="#">Book Flight</a></li>
+        <li><a href="#">Book Hotel</a></li>
+        <li><a href="#">Cancel Ticket</a></li>
+        <li><a href="#">PNR Enquiry</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-title">Information</div>
+      <ul class="footer-links">
+        <li><a href="#">Fare Chart</a></li>
+        <li><a href="#">Tatkal Booking</a></li>
+        <li><a href="#">Refund Rules</a></li>
+        <li><a href="#">Travel Insurance</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-title">Support</div>
+      <ul class="footer-links">
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Feedback</a></li>
+        <li><a href="#">Report Issue</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-title">Legal</div>
+      <ul class="footer-links">
+        <li><a href="#">Terms &amp; Conditions</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Disclaimer</a></li>
+        <li><a href="#">Sitemap</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &#169; 2026 Indian Railway Catering and Tourism Corporation. All rights reserved.
+  </div>
+</footer>
+
+<div id="loginOverlay" class="login-overlay" style="display:none">
+  <div class="login-modal">
+    <button class="close-btn" aria-label="Close login" onclick="closeLogin()">&times;</button>
+    <div class="login-branding">
+      <div class="logo-icon" aria-label="Cheap & Best Trip logo">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="brandGradientModal" x1="0%" x2="100%" y1="0%" y2="100%">
+              <stop offset="0%" stop-color="#2563eb"/>
+              <stop offset="60%" stop-color="#1d4ed8"/>
+              <stop offset="100%" stop-color="#f97316"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="29" fill="url(#brandGradientModal)"/>
+          <path d="M18 42c4-8 8-13 14-13 5 0 9 3 12 8" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 25c5-6 11-9 18-9" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="42" cy="27" r="4.5" fill="#ffffff"/>
+          <circle cx="17" cy="42" r="3.5" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div>
+        <h2 id="authTitle">Login to Cheap & Best Trip</h2>
+        <p id="authSubtitle">Access bookings, PNR status, and personalized offers.</p>
+      </div>
+    </div>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" id="authLoginTab" onclick="switchAuthTab('login')">Sign In</button>
+      <button type="button" class="auth-tab" id="authRegisterTab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email or Mobile</label>
+        <input type="text" id="loginEmail" class="form-input" placeholder="Enter email or mobile number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="Enter password" required>
+      </div>
+      <div class="auth-actions">
+        <label class="checkbox-field">
+          <input type="checkbox" id="rememberMe">
+          Remember me
+        </label>
+        <a href="#" class="small-link">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+      <div class="login-footer">
+        <span>New to Cheap & Best Trip?</span>
+        <a href="#" class="small-link" onclick="showRegister(event)">Create account</a>
+      </div>
+    </form>
+    <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="registerName">Full Name</label>
+        <input type="text" id="registerName" class="form-input" placeholder="Enter full name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="registerEmail">Email or Mobile</label>
+        <input type="text" id="registerEmail" class="form-input" placeholder="Enter email or mobile number" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" class="form-input" placeholder="Create a password" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="registerConfirmPassword">Confirm Password</label>
+        <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Confirm password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+      <div class="login-footer">
+        <span>Already have an account?</span>
+        <a href="#" class="small-link" onclick="showLogin(event)">Sign in</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="bookingOverlay" class="booking-overlay" style="display:none">
+  <div class="booking-modal">
+    <button class="close-btn" aria-label="Close booking" onclick="closeBooking()">&times;</button>
+    <div class="booking-header">
+      <div id="bookingStepLabel">Select your seat</div>
+      <div class="booking-train-info">
+        <div id="bookingTrainName" class="booking-train-name"></div>
+        <div id="bookingTrainRoute" class="booking-train-route"></div>
+      </div>
+    </div>
+
+    <div class="booking-step" id="bookingStep1">
+      <div class="form-group">
+        <label class="form-label">Choose Class</label>
+        <select id="bookingClassSelect" class="form-input" onchange="changeBookingClass(event)"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Passenger Name</label>
+        <input type="text" id="bookingPassengerName" class="form-input" placeholder="Enter passenger name" oninput="updatePassengerName(event)" required>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Passenger Type</label>
+          <select id="bookingPassengerType" class="form-input" onchange="updatePassengerType(event)">
+            <option value="adult">Adult</option>
+            <option value="child">Child</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input type="number" id="bookingPassengerAge" class="form-input" placeholder="Age" min="0" max="120" oninput="updatePassengerAge(event)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select id="bookingPassengerGender" class="form-input" onchange="updatePassengerGender(event)">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Seats</label>
+        <div class="seat-counter">
+          <button type="button" onclick="updateBookingSeats(-1)">−</button>
+          <span id="bookingSeatCount">1</span>
+          <button type="button" onclick="updateBookingSeats(1)">+</button>
+        </div>
+      </div>
+      <div class="booking-price-summary" id="bookingPriceInfo"></div>
+      <button type="button" class="btn btn-primary btn-lg" onclick="proceedToTerms()">Continue</button>
+    </div>
+
+    <div class="booking-step" id="bookingStep2" style="display:none">
+      <div class="booking-terms" id="bookingTermsText"></div>
+      <label class="checkbox-field booking-checkbox">
+        <input type="checkbox" id="bookingAcceptTerms">
+        I accept the terms and conditions.
+      </label>
+      <button type="button" class="btn btn-primary btn-lg" onclick="acceptTerms()">Accept and Continue</button>
+    </div>
+
+    <div class="booking-step" id="bookingStep3" style="display:none">
+      <div class="booking-summary">
+        <div id="bookingPassengerNameSummary" class="booking-summary-line"></div>
+        <div id="bookingPassengerDetailsSummary" class="booking-summary-line"></div>
+        <div id="bookingFareDetails" class="booking-summary-line"></div>
+        <div id="bookingGST" class="booking-summary-line"></div>
+        <div id="bookingServiceTax" class="booking-summary-line"></div>
+        <div id="bookingTotalSummary" class="booking-summary-total"></div>
+      </div>
+      <div class="payment-options">
+        <button type="button" class="payment-method-card active" id="methodNetBanking" onclick="selectPaymentMethod('netbanking')">Net Banking</button>
+        <button type="button" class="payment-method-card" id="methodDebit" onclick="selectPaymentMethod('debit')">Debit Card</button>
+        <button type="button" class="payment-method-card" id="methodWallet" onclick="selectPaymentMethod('wallet')">Wallet</button>
+        <button type="button" class="payment-method-card" id="methodUPI" onclick="selectPaymentMethod('upi')">UPI</button>
+        <button type="button" class="payment-method-card" id="methodEMI" onclick="selectPaymentMethod('emi')">EMI</button>
+      </div>
+      <div id="netBankingOptions" class="bank-options">
+        <div class="bank-label">Select your bank</div>
+        <div class="bank-list">
+          <button type="button" class="bank-option-card active" id="bankHDFC" onclick="selectNetBank('HDFC')">
+            <span class="bank-icon bank-hdfc">
+              <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect width="72" height="72" rx="14" fill="#001f60"/>
+                <rect x="16" y="16" width="24" height="24" fill="#f02c2c"/>
+                <path d="M16 16L40 40" stroke="#fff" stroke-width="6"/>
+                <path d="M40 16L16 40" stroke="#fff" stroke-width="6"/>
+                <rect x="44" y="16" width="12" height="40" fill="#fff"/>
+              </svg>
+            </span>
+            HDFC
+          </button>
+          <button type="button" class="bank-option-card" id="bankSBI" onclick="selectNetBank('SBI')">
+            <span class="bank-icon bank-sbi">
+              <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="40" cy="40" r="38" fill="#003f91"/>
+                <path d="M40 16c-9 12-14 25-14 32 0 7 6 12 14 12s14-5 14-12c0-7-5-20-14-32zm0 20c-3 0-6 3-6 7s3 7 6 7 6-3 6-7-3-7-6-7z" fill="#fff"/>
+              </svg>
+            </span>
+            SBI
+          </button>
+          <button type="button" class="bank-option-card" id="bankAxis" onclick="selectNetBank('Axis')"><span class="bank-icon">A</span>Axis</button>
+          <button type="button" class="bank-option-card" id="bankICICI" onclick="selectNetBank('ICICI')"><span class="bank-icon">I</span>ICICI</button>
+        </div>
+      </div>
+      <div id="upiOptions" class="upi-options" style="display:none">
+        <div class="bank-label">Choose UPI app</div>
+        <div class="bank-list">
+          <button type="button" class="upi-option-card active" id="upiGooglePay" onclick="selectUPIMethod('Google Pay')">
+            <span class="upi-icon googlepay">
+              <svg viewBox="0 0 120 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M24 24c0-6.6 5.4-12 12-12 2.2 0 4.3.6 6.1 1.6l-2.4 3.3c-1.1-.7-2.4-1.1-3.7-1.1-3.7 0-6.6 3-6.6 6.6s2.9 6.6 6.6 6.6c1.3 0 2.5-.4 3.6-1.1l2.4 3.3c-1.8 1-3.9 1.6-6.1 1.6-6.6 0-12-5.4-12-12Z" fill="#4285F4"/>
+                <path d="M24 24c0-6.6 5.4-12 12-12 2.2 0 4.3.6 6.1 1.6l-2.4 3.3c-1.1-.7-2.4-1.1-3.7-1.1-3.7 0-6.6 3-6.6 6.6s2.9 6.6 6.6 6.6c1.3 0 2.5-.4 3.6-1.1l2.4 3.3c-1.8 1-3.9 1.6-6.1 1.6-6.6 0-12-5.4-12-12Z" fill="#34A853" opacity="0.5"/>
+                <path d="M24 24c0-6.6 5.4-12 12-12 2.2 0 4.3.6 6.1 1.6l-2.4 3.3c-1.1-.7-2.4-1.1-3.7-1.1-3.7 0-6.6 3-6.6 6.6s2.9 6.6 6.6 6.6c1.3 0 2.5-.4 3.6-1.1l2.4 3.3c-1.8 1-3.9 1.6-6.1 1.6-6.6 0-12-5.4-12-12Z" fill="#FBBC05" opacity="0.2"/>
+                <path d="M24 24c0-6.6 5.4-12 12-12 2.2 0 4.3.6 6.1 1.6l-2.4 3.3c-1.1-.7-2.4-1.1-3.7-1.1-3.7 0-6.6 3-6.6 6.6s2.9 6.6 6.6 6.6c1.3 0 2.5-.4 3.6-1.1l2.4 3.3c-1.8 1-3.9 1.6-6.1 1.6-6.6 0-12-5.4-12-12Z" fill="#EA4335" opacity="0.15"/>
+                <text x="50" y="31" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#202124">Pay</text>
+              </svg>
+            </span>
+            Google Pay
+          </button>
+          <button type="button" class="upi-option-card phonepe-option" id="upiPhonePe" onclick="selectUPIMethod('PhonePe')">
+            PhonePe
+          </button>
+          <button type="button" class="upi-option-card" id="upiPaytm" onclick="selectUPIMethod('Paytm')">
+            <span class="upi-icon paytm">
+              <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="4" y="12" width="40" height="24" rx="10" fill="#0033A0"/>
+                <path d="M14 30v-5.8h2.6V30h2.8v-8h-5.4V30h0Z" fill="#fff"/>
+                <path d="M20.4 24.4h3V30h2.8v-8h-5.8v2.4Z" fill="#fff"/>
+                <path d="M27 22h3.2a2.9 2.9 0 1 1 0 5.8H27V22Z" fill="#fff"/>
+                <path d="M34 24.4h1.8v1.4h-1.8V30h-2.8v-8H34v2.4Z" fill="#fff"/>
+              </svg>
+            </span>
+            Paytm
+          </button>
+          <button type="button" class="upi-option-card" id="upiNaviPay" onclick="selectUPIMethod('Navi Pay')">
+            <span class="upi-icon navipay">
+              <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="4" y="4" width="40" height="40" rx="12" fill="#FF5A00"/>
+                <path d="M16 16h16v4H16v-4Zm0 8h16v4H16v-4Zm0 8h10v4H16v-4Z" fill="#fff"/>
+              </svg>
+            </span>
+            Navi Pay
+          </button>
+          <button type="button" class="upi-option-card" id="upiQRCode" onclick="selectUPIMethod('QR Code')">
+            <span class="upi-icon qr">
+              <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="6" y="6" width="12" height="12" fill="#111827"/>
+                <rect x="30" y="6" width="12" height="12" fill="#111827"/>
+                <rect x="6" y="30" width="12" height="12" fill="#111827"/>
+                <rect x="28" y="28" width="4" height="4" fill="#fff"/>
+                <rect x="36" y="28" width="4" height="4" fill="#fff"/>
+                <rect x="28" y="36" width="4" height="4" fill="#fff"/>
+                <rect x="36" y="36" width="4" height="4" fill="#fff"/>
+              </svg>
+            </span>
+            Scan QR
+          </button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg" onclick="confirmBooking()">Pay Now</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
