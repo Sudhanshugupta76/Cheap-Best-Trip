@@ -68,7 +68,12 @@ function normalizeRunningStatus(data, trainNumber, journeyDate) {
 }
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, database: 'json-file', railwayApiConfigured: Boolean(process.env.INDIAN_RAIL_API_KEY) });
+  res.json({
+    ok: true,
+    database: 'json-file',
+    railwayApiConfigured: Boolean(process.env.INDIAN_RAIL_API_KEY),
+    paymentMode: process.env.PAYMENT_MODE || 'demo'
+  });
 });
 
 app.get('/api/railway/pnr', async (req, res) => {

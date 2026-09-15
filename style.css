@@ -1,5 +1,5 @@
 /* ============================================
-   IRCTC Redesign - Main Stylesheet
+  Cheap & Best Trip - Main Stylesheet
    ============================================ */
 
 :root {
@@ -2099,4 +2099,29 @@ body {
 
 .hotel-request {
   resize: vertical;
+}
+
+.demo-payment-notice {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }

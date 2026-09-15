@@ -5,6 +5,7 @@
   "description": "Cheap & Best Trip booking and railway status backend",
   "main": "server.js",
   "scripts": {
+    "build": "node --check server.js && node --check script.js",
     "start": "node server.js",
     "dev": "node --watch server.js"
   },

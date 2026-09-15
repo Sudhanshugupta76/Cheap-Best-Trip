@@ -1,5 +1,5 @@
 // ============================================
-// IRCTC Redesign - Main JavaScript
+// Cheap & Best Trip - Main JavaScript
 // ============================================
 
 const LIVE_RAIL_API = {
@@ -32,10 +32,15 @@ function checkPNR(event) {
   const result = document.getElementById('pnrResult');
   result.innerHTML = '<span class="loading-text">Checking latest PNR status...</span>';
   fetchRailStatus(LIVE_RAIL_API.pnr, { pnr }).then(data => {
-    const status = data.status || data.pnrStatus || data.PNRStatus || data.response?.[0]?.PNRStatus || 'Confirmed';
-    result.innerHTML = `<strong>${status}</strong><span>Live result for PNR ${pnr}</span>`;
-  }).catch(() => {
-    result.innerHTML = `<strong>Demo result: Chart not prepared</strong><span>PNR ${pnr} is ready for live lookup after the railway API is connected.</span><small>Demo data only</small>`;
+    const status = data.status || data.pnrStatus || data.PNRStatus || data.response?.[0]?.PNRStatus;
+    if (!status) throw new Error('No PNR result was returned by the railway provider.');
+    result.innerHTML = `<strong>${status}</strong><span>Provider result for PNR ${pnr}</span>`;
+  }).catch(error => {
+    const message = error.message || 'The railway service could not be reached.';
+    const setupHint = message.toLowerCase().includes('api key')
+      ? 'Add INDIAN_RAIL_API_KEY to .env and restart the backend.'
+      : 'Open the site through http://localhost:3000, not directly as a file.';
+    result.innerHTML = `<strong>Live PNR status unavailable</strong><span>${message}</span><small>${setupHint}</small>`;
   });
 }
 
@@ -44,6 +49,10 @@ function checkRunningStatus(event) {
   const trainNumber = document.getElementById('runningTrainNumber').value.trim();
   const date = document.getElementById('runningDate').value;
   const result = document.getElementById('runningResult');
+  if (!/^\d{1,5}$/.test(trainNumber) || !date) {
+    result.innerHTML = '<strong>Enter a valid train number and journey date.</strong><span>Train number must contain 1 to 5 digits.</span>';
+    return;
+  }
   result.innerHTML = '<span class="loading-text">Finding the train...</span>';
   fetchRailStatus(LIVE_RAIL_API.running, { trainNumber, date }).then(data => {
     const station = data.currentStation ? `${data.currentStation}${data.currentStationCode ? ` (${data.currentStationCode})` : ''}` : 'Current location unavailable';
@@ -275,7 +284,9 @@ const hotelBookingState = {
   paymentMethod: 'UPI'
 };
 
-function startHotelBooking(index, city) {
+let currentHotelSearchCity = '';
+
+function startHotelBooking(index, city = currentHotelSearchCity) {
   const hotel = getHotelsForCity(city)[index];
   hotelBookingState.hotel = hotel;
   hotelBookingState.city = city;
@@ -597,7 +608,7 @@ function renderTicket() {
   document.getElementById('ticketClass').textContent = ticket.travelClass;
   document.getElementById('ticketPassenger').textContent = isHotel ? `${ticket.passengerName} · ${ticket.stay.mobile}` : `${ticket.passengerName} (${ticket.passengerAge}, ${ticket.passengerGender})`;
   document.getElementById('ticketTravellers').textContent = ticket.seatCount;
-  document.getElementById('ticketPayment').textContent = ticket.paymentText;
+  document.getElementById('ticketPayment').textContent = `${ticket.paymentText} (demo, not charged)`;
   document.getElementById('ticketTotal').textContent = `₹${ticket.total}`;
   document.getElementById('ticketOverlay').style.display = 'flex';
 }
@@ -949,6 +960,22 @@ function getAirportCode(value) {
   return code ? code[1].toUpperCase() : value.trim().slice(0, 3).toUpperCase();
 }
 
+function formatDateForResults(value) {
+  if (!value) return 'selected date';
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function updateSearchDateSummaries() {
+  const trainDate = document.getElementById('trainDate');
+  const flightDate = document.getElementById('flightDate');
+  const trainCount = document.getElementById('trainResultsCount');
+  const flightCount = document.getElementById('flightResultsCount');
+  if (trainDate && trainCount) trainCount.textContent = `${mockTrains.length} trains found for ${formatDateForResults(trainDate.value)}`;
+  if (flightDate && flightCount) flightCount.textContent = `${mockFlights.length} flights found for ${formatDateForResults(flightDate.value)}`;
+}
+
 // ============================================
 // SEARCH FUNCTIONS
 // ============================================
@@ -958,6 +985,11 @@ function searchTrains() {
   const from = document.getElementById('trainFrom').value.split('(')[0].trim();
   const to = document.getElementById('trainTo').value.split('(')[0].trim();
   const date = document.getElementById('trainDate').value;
+
+  if (!from || !to || !date) {
+    alert('Please enter From, To and journey date.');
+    return;
+  }
 
   btn.classList.add('loading');
 
@@ -970,8 +1002,7 @@ function searchTrains() {
     const trainsList = document.getElementById('trainsList');
 
     resultsRoute.textContent = from + ' \u2192 ' + to;
-    const dateObj = new Date(date);
-    const dateStr = dateObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const dateStr = formatDateForResults(date);
     resultsCount.textContent = mockTrains.length + ' trains found for ' + dateStr;
 
     trainsList.innerHTML = mockTrains.map((train, i) => {
@@ -1014,6 +1045,16 @@ function searchFlights() {
   const fromCode = getAirportCode(document.getElementById('flightFrom').value);
   const toCode = getAirportCode(document.getElementById('flightTo').value);
   const date = document.getElementById('flightDate').value;
+  const returnDate = document.getElementById('flightReturn').value;
+
+  if (!from || !to || !date) {
+    alert('Please enter From, To and departure date.');
+    return;
+  }
+  if (returnDate && returnDate < date) {
+    alert('Return date cannot be before departure date.');
+    return;
+  }
 
   btn.classList.add('loading');
 
@@ -1026,8 +1067,7 @@ function searchFlights() {
     const flightsList = document.getElementById('flightsList');
 
     resultsRoute.textContent = from + ' \u2192 ' + to;
-    const dateObj = new Date(date);
-    const dateStr = dateObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const dateStr = formatDateForResults(date);
     resultsCount.textContent = mockFlights.length + ' flights found for ' + dateStr;
 
     flightsList.innerHTML = mockFlights.map((flight, i) => {
@@ -1074,6 +1114,16 @@ function searchHotels() {
   const checkOut = document.getElementById('hotelCheckOut').value;
   const cityHotels = getHotelsForCity(city);
 
+  if (!city.trim() || !checkIn || !checkOut) {
+    alert('Please enter a city, check-in date and check-out date.');
+    return;
+  }
+  if (checkOut <= checkIn) {
+    alert('Check-out date must be after check-in date.');
+    return;
+  }
+  currentHotelSearchCity = city.trim();
+
   btn.classList.add('loading');
 
   setTimeout(() => {
@@ -1088,7 +1138,6 @@ function searchHotels() {
     resultsCount.textContent = cityHotels.length + ' properties found in ' + city;
 
     hotelsList.innerHTML = cityHotels.map((hotel, i) => {
-      const safeCity = city.trim().replace(/'/g, '');
       const stars = Array(5).fill(0).map((_, idx) => {
         return '<span class="star ' + (idx < Math.floor(hotel.rating) ? '' : 'empty') + '">\u2605</span>';
       }).join('');
@@ -1107,7 +1156,7 @@ function searchHotels() {
           '<div class="hotel-amenities">' + amenitiesHtml + '</div>' +
           '<div class="hotel-footer">' +
             '<div class="hotel-price">' + hotel.price + '<span>/night</span></div>' +
-            '<button class="btn btn-primary btn-sm" onclick="startHotelBooking(' + i + ', \'' + safeCity + '\')">Book Now</button>' +
+            '<button class="btn btn-primary btn-sm" onclick="startHotelBooking(' + i + ')">Book Now</button>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -1139,6 +1188,12 @@ document.addEventListener('DOMContentLoaded', function() {
       input.value = formatDateInput(date);
       input.min = formatDateInput(today);
     }
+  });
+
+  updateSearchDateSummaries();
+  ['trainDate', 'flightDate'].forEach(id => {
+    const input = document.getElementById(id);
+    if (input) input.addEventListener('change', updateSearchDateSummaries);
   });
 
   const runningDate = document.getElementById('runningDate');

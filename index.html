@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Find affordable train, flight and hotel options with Cheap & Best Trip.">
+  <meta property="og:title" content="Cheap & Best Trip | Affordable Travel Booking">
+  <meta property="og:description" content="Find affordable train, flight and hotel options with Cheap & Best Trip.">
+  <meta property="og:type" content="website">
   <title>Cheap & Best Trip - Book Train, Flight & Hotel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <base target="_blank">
 </head>
 <body>
 
@@ -271,7 +274,8 @@
     <div class="results-header">
       <div>
         <div class="results-route" id="trainResultsRoute">New Delhi &#8594; Mumbai Central</div>
-        <div class="results-count" id="trainResultsCount">5 trains found for Tue, 05 Aug 2026</div>
+        <div class="results-count" id="trainResultsCount">Demo Train Data</div>
+        <span class="demo-badge">Demo Train Data</span>
       </div>
       <div class="filter-bar">
         <button class="filter-btn active">All</button>
@@ -289,7 +293,8 @@
     <div class="results-header">
       <div>
         <div class="results-route" id="flightResultsRoute">New Delhi &#8594; Mumbai</div>
-        <div class="results-count" id="flightResultsCount">5 flights found for Tue, 05 Aug 2026</div>
+        <div class="results-count" id="flightResultsCount">Demo Flight Data</div>
+        <span class="demo-badge">Demo Flight Data</span>
       </div>
       <div class="filter-bar">
         <button class="filter-btn active">All</button>
@@ -307,7 +312,8 @@
     <div class="results-header">
       <div>
         <div class="results-route" id="hotelResultsRoute">Hotels in Mumbai</div>
-        <div class="results-count" id="hotelResultsCount">6 properties found</div>
+        <div class="results-count" id="hotelResultsCount">Demo Hotel Data</div>
+        <span class="demo-badge">Demo Hotel Data</span>
       </div>
       <div class="filter-bar">
         <button class="filter-btn active">All</button>
@@ -323,7 +329,7 @@
   <!-- ========== RECENT SEARCHES ========== -->
   <div class="section-header">
     <h2 class="section-title">Recent Searches</h2>
-    <a href="#" class="section-link">View All &#8594;</a>
+    <a href="holidays.html" target="_self" class="section-link">View All &#8594;</a>
   </div>
   <div class="recent-list">
     <div class="recent-item" onclick="setRoute('NDLS','HWH')">
@@ -358,7 +364,7 @@
   <!-- ========== POPULAR ROUTES ========== -->
   <div class="section-header">
     <h2 class="section-title">Popular Routes</h2>
-    <a href="#" class="section-link">Explore All &#8594;</a>
+    <a href="tourism.html" target="_self" class="section-link">Explore All &#8594;</a>
   </div>
   <div class="routes-grid">
     <div class="route-card" onclick="setRoute('NDLS','BCT')">
@@ -480,43 +486,44 @@
     <div>
       <div class="footer-title">Services</div>
       <ul class="footer-links">
-        <li><a href="#">Book Train</a></li>
-        <li><a href="#">Book Flight</a></li>
-        <li><a href="#">Book Hotel</a></li>
-        <li><a href="#">Cancel Ticket</a></li>
-        <li><a href="#">PNR Enquiry</a></li>
+        <li><a href="index.html#trainForm" target="_self">Book Train</a></li>
+        <li><a href="index.html#flightForm" target="_self">Book Flight</a></li>
+        <li><a href="index.html#hotelForm" target="_self">Book Hotel</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Contact for cancellation</a></li>
+        <li><a href="pnr.html" target="_self">PNR Enquiry</a></li>
       </ul>
     </div>
     <div>
       <div class="footer-title">Information</div>
       <ul class="footer-links">
-        <li><a href="#">Fare Chart</a></li>
-        <li><a href="#">Tatkal Booking</a></li>
-        <li><a href="#">Refund Rules</a></li>
-        <li><a href="#">Travel Insurance</a></li>
+        <li><a href="index.html#trainForm" target="_self">Fare Chart</a></li>
+        <li><a href="index.html#trainForm" target="_self">Tatkal Booking</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Refund Rules</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Travel Insurance</a></li>
       </ul>
     </div>
     <div>
       <div class="footer-title">Support</div>
       <ul class="footer-links">
-        <li><a href="#">Contact Us</a></li>
-        <li><a href="#">FAQ</a></li>
-        <li><a href="#">Feedback</a></li>
-        <li><a href="#">Report Issue</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Contact Us</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">FAQ</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Feedback</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Report Issue</a></li>
       </ul>
     </div>
     <div>
       <div class="footer-title">Legal</div>
       <ul class="footer-links">
-        <li><a href="#">Terms &amp; Conditions</a></li>
-        <li><a href="#">Privacy Policy</a></li>
-        <li><a href="#">Disclaimer</a></li>
-        <li><a href="#">Sitemap</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Terms &amp; Conditions</a></li>
+        <li><a href="mailto:support@cheapbesttrip.example">Privacy Policy</a></li>
+        <li><a href="#disclaimer">Disclaimer</a></li>
+        <li><a href="index.html" target="_self">Sitemap</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    &#169; 2026 Indian Railway Catering and Tourism Corporation. All rights reserved.
+    &#169; 2026 Cheap &amp; Best Trip. All rights reserved.
+    <span id="disclaimer"> Cheap &amp; Best Trip is an independent travel project and is not affiliated with IRCTC, Indian Railways, airlines, hotels, or other third-party travel providers unless explicitly stated.</span>
   </div>
 </footer>
 
@@ -563,12 +570,12 @@
           <input type="checkbox" id="rememberMe">
           Remember me
         </label>
-        <a href="#" class="small-link">Forgot password?</a>
+        <a href="mailto:support@cheapbesttrip.example?subject=Password%20reset" class="small-link">Forgot password?</a>
       </div>
       <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
       <div class="login-footer">
         <span>New to Cheap & Best Trip?</span>
-        <a href="#" class="small-link" onclick="showRegister(event)">Create account</a>
+        <a href="?register" class="small-link" onclick="showRegister(event)">Create account</a>
       </div>
     </form>
     <form id="registerForm" onsubmit="handleRegister(event)" style="display:none;">
@@ -591,7 +598,7 @@
       <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
       <div class="login-footer">
         <span>Already have an account?</span>
-        <a href="#" class="small-link" onclick="showLogin(event)">Sign in</a>
+        <a href="?login" class="small-link" onclick="showLogin(event)">Sign in</a>
       </div>
     </form>
   </div>
@@ -758,7 +765,8 @@
           </button>
         </div>
       </div>
-      <button type="button" class="btn btn-primary btn-lg" onclick="confirmBooking()">Pay Now</button>
+      <div class="demo-payment-notice">Demo checkout only. No real payment will be charged and no railway/airline reservation is issued.</div>
+      <button type="button" class="btn btn-primary btn-lg" onclick="confirmBooking()">Create Demo Booking</button>
     </div>
   </div>
 </div>
@@ -780,7 +788,8 @@
       </div>
       <div class="form-group"><label class="form-label" for="hotelSpecialRequest">Special request (optional)</label><textarea class="form-input hotel-request" id="hotelSpecialRequest" rows="3" placeholder="Late check-in, extra bed, accessibility request..."></textarea></div>
       <label class="checkbox-field booking-checkbox"><input type="checkbox" id="hotelAcceptTerms"> I accept the booking and cancellation policy.</label>
-      <button type="submit" class="btn btn-primary btn-lg">Confirm &amp; Pay</button>
+      <div class="demo-payment-notice">Demo checkout only. No real payment will be charged and no hotel reservation is issued.</div>
+      <button type="submit" class="btn btn-primary btn-lg">Create Demo Booking</button>
     </form>
   </div>
 </div>
@@ -789,9 +798,9 @@
   <div class="booking-modal ticket-modal">
     <button class="close-btn" aria-label="Close ticket" onclick="closeTicket()">&times;</button>
     <div class="booking-header">
-      <div class="ticket-success">Booking confirmed</div>
+      <div class="ticket-success">Demo booking created</div>
       <div class="booking-train-info">
-        <div id="ticketType" class="booking-train-name">Travel ticket</div>
+        <div id="ticketType" class="booking-train-name">Demo travel reference</div>
         <div id="ticketNumber" class="booking-train-route"></div>
       </div>
     </div>
@@ -817,7 +826,7 @@
     <div class="login-branding"><div class="service-icon blue">&#127758;</div><div><h2 id="visaGuideTitle">Visa procedure</h2><p id="visaGuideSubtitle"></p></div></div>
     <ol class="visa-steps" id="visaGuideSteps"></ol>
     <div class="visa-warning">Check the destination immigration website for current eligibility, fees, insurance and passport validity rules before payment.</div>
-    <a class="btn btn-primary btn-lg" id="visaOfficialLink" href="#" rel="noopener">Open official immigration site</a>
+    <a class="btn btn-primary btn-lg" id="visaOfficialLink" href="https://www.ica.gov.sg/" rel="noopener">Open official immigration site</a>
   </div>
 </div>
 
