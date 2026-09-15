@@ -2,6 +2,105 @@
 // IRCTC Redesign - Main JavaScript
 // ============================================
 
+const LIVE_RAIL_API = {
+  pnr: '/api/railway/pnr',
+  running: '/api/railway/running'
+};
+
+
+function showService(service) {
+  const target = service === 'pnr' ? 'pnrPanel' : service === 'running' ? 'runningPanel' : service === 'holidays' ? 'holidaySection' : 'visaSection';
+  const element = document.getElementById(target);
+  if (element) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function fetchRailStatus(endpoint, params) {
+  if (window.location.protocol === 'file:') throw new Error('Local preview has no live API');
+  const query = new URLSearchParams(params);
+  const response = await fetch(`${endpoint}?${query}`);
+  if (!response.ok) throw new Error('Railway service unavailable');
+  return response.json();
+}
+
+function checkPNR(event) {
+  event.preventDefault();
+  const pnr = document.getElementById('pnrNumber').value.trim();
+  const result = document.getElementById('pnrResult');
+  result.innerHTML = '<span class="loading-text">Checking latest PNR status...</span>';
+  fetchRailStatus(LIVE_RAIL_API.pnr, { pnr }).then(data => {
+    const status = data.status || data.pnrStatus || data.PNRStatus || data.response?.[0]?.PNRStatus || 'Confirmed';
+    result.innerHTML = `<strong>${status}</strong><span>Live result for PNR ${pnr}</span>`;
+  }).catch(() => {
+    result.innerHTML = `<strong>Demo result: Chart not prepared</strong><span>PNR ${pnr} is ready for live lookup after the railway API is connected.</span><small>Demo data only</small>`;
+  });
+}
+
+function checkRunningStatus(event) {
+  event.preventDefault();
+  const trainNumber = document.getElementById('runningTrainNumber').value.trim();
+  const date = document.getElementById('runningDate').value;
+  const result = document.getElementById('runningResult');
+  result.innerHTML = '<span class="loading-text">Finding the train...</span>';
+  fetchRailStatus(LIVE_RAIL_API.running, { trainNumber, date }).then(data => {
+    result.innerHTML = `<strong>${data.status || 'Running on schedule'}</strong><span>${data.currentStation || 'Current location unavailable'}${data.delay ? ` · ${data.delay} delay` : ''}</span>`;
+  }).catch(() => {
+    result.innerHTML = `<strong>Demo result: Train ${trainNumber} is running</strong><span>Live location will appear after the railway API is connected.</span><small>Demo data only · Journey date ${date}</small>`;
+  });
+}
+
+const visaGuides = {
+  UAE: {
+    title: 'Dubai / UAE tourist visa',
+    subtitle: 'Typical visitor visa process for Indian travellers',
+    steps: ['Check passport validity, photo and return-ticket requirements.', 'Choose an approved airline, hotel, travel agent or UAE sponsor to submit the application.', 'Upload passport, photo, travel dates, hotel booking and other requested documents.', 'Pay the current visa fee and track the application using the provider reference.', 'Download the approved e-visa and carry it with your passport for airline check-in and arrival.'],
+    link: 'https://u.ae/en/information-and-services/visa-and-emirates-id'
+  },
+  Thailand: {
+    title: 'Thailand tourist visa',
+    subtitle: 'Typical e-visa preparation and entry process',
+    steps: ['Confirm whether your passport and travel dates require a visa or qualify for a current exemption.', 'Create an account on the official Thai e-Visa portal and select the correct visa type.', 'Upload passport, photograph, itinerary, accommodation and financial documents.', 'Pay the current fee and monitor email for approval or clarification requests.', 'Print or save the approval letter and present it with passport and onward-travel proof at entry.'],
+    link: 'https://www.thaievisa.go.th/'
+  },
+  Singapore: {
+    title: 'Singapore tourist visa',
+    subtitle: 'Typical application process for Indian travellers',
+    steps: ['Check passport validity and prepare a recent photograph, return ticket and accommodation details.', 'Submit the application through an authorised Singapore visa agent or approved local contact.', 'Provide the completed form, passport copy, itinerary and financial or employment documents if requested.', 'Pay the current processing fee and wait for the outcome, usually sent electronically.', 'Carry the approved e-visa, passport, return ticket and proof of funds for arrival checks.'],
+    link: 'https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements'
+  },
+  Malaysia: {
+    title: 'Malaysia tourist entry',
+    subtitle: 'Typical preparation for Indian travellers',
+    steps: ['Check current visa or eVisa eligibility for your passport and travel dates.', 'Create an application on the official Malaysian immigration portal if a visa is required.', 'Upload passport, photograph, return ticket, accommodation and financial documents.', 'Pay the current fee and save the approved eVisa or entry confirmation.', 'Carry passport, accommodation proof, return ticket and sufficient funds for arrival checks.'],
+    link: 'https://malaysiavisa.imi.gov.my/'
+  },
+  'Sri Lanka': {
+    title: 'Sri Lanka tourist ETA',
+    subtitle: 'Electronic travel authorisation preparation',
+    steps: ['Check passport validity and confirm the current ETA rules for your nationality.', 'Open the official Sri Lanka ETA portal and choose the tourism category.', 'Enter passport, travel, accommodation and contact details accurately.', 'Pay the current ETA fee and save the approval reference or email.', 'Carry the ETA approval, passport, return ticket and hotel details at immigration.'],
+    link: 'https://eta.gov.lk/slvisa/'
+  },
+  Maldives: {
+    title: 'Maldives tourist arrival',
+    subtitle: 'Arrival visa and travel preparation guide',
+    steps: ['Confirm passport validity, return ticket and confirmed accommodation before travel.', 'Complete the required traveller declaration through the official Maldives immigration channel.', 'Keep hotel booking, return ticket and proof of funds ready for inspection.', 'Receive the tourist arrival visa decision at immigration on arrival, subject to current rules.', 'Follow the permitted stay period and retain your travel documents during the trip.'],
+    link: 'https://immigration.gov.mv/tourist-visa/'
+  }
+};
+
+function openVisaGuide(country) {
+  const guide = visaGuides[country];
+  if (!guide) return;
+  document.getElementById('visaGuideTitle').textContent = guide.title;
+  document.getElementById('visaGuideSubtitle').textContent = guide.subtitle;
+  document.getElementById('visaGuideSteps').innerHTML = guide.steps.map(step => `<li>${step}</li>`).join('');
+  document.getElementById('visaOfficialLink').href = guide.link;
+  document.getElementById('visaOverlay').style.display = 'flex';
+}
+
+function closeVisaGuide() {
+  document.getElementById('visaOverlay').style.display = 'none';
+}
+
 // Tab switching for search forms
 function setTab(btn, tabType) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -137,7 +236,9 @@ function handleRegister(event) {
 
 const bookingState = {
   step: 1,
+  bookingType: 'train',
   selectedTrain: null,
+  selectedFlight: null,
   selectedClass: null,
   seatCount: 1,
   passengerName: '',
@@ -151,15 +252,36 @@ const bookingState = {
 
 function startSeatBooking(index) {
   const train = mockTrains[index];
+  bookingState.bookingType = 'train';
   bookingState.selectedTrain = train;
+  bookingState.selectedFlight = null;
   bookingState.selectedClass = train.classes[0]?.name || '3A';
+  resetBookingState();
+  document.getElementById('bookingOverlay').style.display = 'flex';
+  renderBookingStep();
+}
+
+function startFlightBooking(index) {
+  const flight = mockFlights[index];
+  bookingState.bookingType = 'flight';
+  bookingState.selectedTrain = null;
+  bookingState.selectedFlight = flight;
+  bookingState.selectedClass = 'Economy';
+  resetBookingState();
+  document.getElementById('bookingOverlay').style.display = 'flex';
+  renderBookingStep();
+}
+
+function resetBookingState() {
   bookingState.seatCount = 1;
+  bookingState.passengerName = '';
+  bookingState.passengerType = 'adult';
+  bookingState.passengerAge = '';
+  bookingState.passengerGender = 'male';
   bookingState.paymentMethod = 'netbanking';
   bookingState.netBank = 'HDFC';
   bookingState.upiMethod = 'Google Pay';
   bookingState.step = 1;
-  document.getElementById('bookingOverlay').style.display = 'flex';
-  renderBookingStep();
 }
 
 function closeBooking() {
@@ -183,21 +305,23 @@ function renderBookingStep() {
   const netBankingOptions = document.getElementById('netBankingOptions');
   const upiOptions = document.getElementById('upiOptions');
   const seatCounter = document.getElementById('bookingSeatCount');
-  const priceInfo = document.getElementById('bookingFareDetails');
+  const priceInfo = document.getElementById('bookingPriceInfo');
   const gstAmount = document.getElementById('bookingGST');
   const serviceTax = document.getElementById('bookingServiceTax');
   const totalSummary = document.getElementById('bookingTotalSummary');
   const termsText = document.getElementById('bookingTermsText');
 
-  const train = bookingState.selectedTrain;
-  if (!train) return;
+  const isFlight = bookingState.bookingType === 'flight';
+  const booking = isFlight ? bookingState.selectedFlight : bookingState.selectedTrain;
+  if (!booking) return;
 
-  trainName.textContent = train.name + ' #' + train.number;
-  trainRoute.textContent = train.from + ' → ' + train.to;
-  classSelect.innerHTML = train.classes.map(c => `<option value="${c.name}" ${c.name === bookingState.selectedClass ? 'selected' : ''}>${c.name}</option>`).join('');
+  trainName.textContent = isFlight ? `${booking.airline} ${booking.number}` : `${booking.name} #${booking.number}`;
+  trainRoute.textContent = `${booking.from} → ${booking.to}`;
+  const classOptions = isFlight ? ['Economy', 'Premium Economy', 'Business', 'First'] : booking.classes.map(c => c.name);
+  classSelect.innerHTML = classOptions.map(className => `<option value="${className}" ${className === bookingState.selectedClass ? 'selected' : ''}>${className}</option>`).join('');
   seatCounter.textContent = bookingState.seatCount;
 
-  const baseFare = getClassFare(bookingState.selectedClass);
+  const baseFare = isFlight ? getFlightFare(booking) : getClassFare(bookingState.selectedClass);
   const subtotal = baseFare * bookingState.seatCount;
   const gst = Math.round(subtotal * 0.05);
   const service = Math.round(subtotal * 0.12);
@@ -217,7 +341,7 @@ function renderBookingStep() {
   document.querySelectorAll('.upi-option-card').forEach(card => card.classList.remove('active'));
   const selectedUPIButton = document.getElementById(`upi${bookingState.upiMethod.replace(/\s+/g, '')}`);
   if (selectedUPIButton) selectedUPIButton.classList.add('active');
-  priceInfo.textContent = `Fare per seat: ₹${baseFare} × ${bookingState.seatCount} = ₹${subtotal}`;
+  priceInfo.textContent = `${isFlight ? 'Fare per traveller' : 'Fare per seat'}: ₹${baseFare} × ${bookingState.seatCount} = ₹${subtotal}`;
   gstAmount.textContent = `GST (5%): ₹${gst}`;
   serviceTax.textContent = `Service Fee (12%): ₹${service}`;
   totalSummary.textContent = `Total payable: ₹${total}`;
@@ -233,6 +357,11 @@ function renderBookingStep() {
   });
   const selectedMethodButton = document.getElementById(`method${bookingState.paymentMethod.charAt(0).toUpperCase() + bookingState.paymentMethod.slice(1)}`);
   if (selectedMethodButton) selectedMethodButton.classList.add('active');
+
+  const classLabel = document.getElementById('bookingClassLabel');
+  const seatLabel = document.getElementById('bookingSeatsLabel');
+  if (classLabel) classLabel.textContent = isFlight ? 'Cabin Class' : 'Choose Class';
+  if (seatLabel) seatLabel.textContent = isFlight ? 'Travellers' : 'Seats';
 }
 
 function changeBookingClass(event) {
@@ -306,7 +435,7 @@ function selectUPIMethod(method) {
 }
 
 function confirmBooking() {
-  closeBooking();
+  const booking = bookingState.bookingType === 'flight' ? bookingState.selectedFlight : bookingState.selectedTrain;
   const paymentMethod = formatPaymentMethod(bookingState.paymentMethod);
   let paymentText = paymentMethod;
   if (bookingState.paymentMethod === 'netbanking') {
@@ -314,7 +443,84 @@ function confirmBooking() {
   } else if (bookingState.paymentMethod === 'upi') {
     paymentText += ` (${bookingState.upiMethod})`;
   }
-  alert(`Payment selected: ${paymentText}. Booking confirmed!`);
+
+  bookingState.confirmedTicket = {
+    ticketNumber: `CBT-${Date.now().toString().slice(-8)}`,
+    bookingType: bookingState.bookingType,
+    booking,
+    travelClass: bookingState.selectedClass,
+    passengerName: bookingState.passengerName,
+    passengerType: bookingState.passengerType,
+    passengerAge: bookingState.passengerAge,
+    passengerGender: bookingState.passengerGender,
+    seatCount: bookingState.seatCount,
+    paymentText,
+    total: getBookingTotal()
+  };
+  closeBooking();
+  renderTicket();
+  saveBooking(bookingState.confirmedTicket);
+}
+
+function saveBooking(ticket) {
+  const booking = ticket.booking;
+  fetch('/api/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ticketNumber: ticket.ticketNumber,
+      bookingType: ticket.bookingType,
+      passengerName: ticket.passengerName,
+      route: `${booking.from} → ${booking.to}`,
+      booking: ticket
+    })
+  }).catch(() => {
+  });
+}
+
+function getFlightFare(flight) {
+  return Number(flight.price.replace(/[^0-9]/g, '')) || 0;
+}
+
+function getBookingTotal() {
+  const booking = bookingState.bookingType === 'flight' ? bookingState.selectedFlight : bookingState.selectedTrain;
+  const baseFare = bookingState.bookingType === 'flight' ? getFlightFare(booking) : getClassFare(bookingState.selectedClass);
+  const subtotal = baseFare * bookingState.seatCount;
+  return subtotal + Math.round(subtotal * 0.05) + Math.round(subtotal * 0.12);
+}
+
+function renderTicket() {
+  const ticket = bookingState.confirmedTicket;
+  if (!ticket) return;
+  const booking = ticket.booking;
+  document.getElementById('ticketNumber').textContent = ticket.ticketNumber;
+  document.getElementById('ticketType').textContent = ticket.bookingType === 'flight' ? 'Flight ticket' : 'Train ticket';
+  document.getElementById('ticketOperator').textContent = ticket.bookingType === 'flight' ? `${booking.airline} ${booking.number}` : `${booking.name} #${booking.number}`;
+  document.getElementById('ticketRoute').textContent = `${booking.from} → ${booking.to}`;
+  document.getElementById('ticketClass').textContent = ticket.travelClass;
+  document.getElementById('ticketPassenger').textContent = `${ticket.passengerName} (${ticket.passengerAge}, ${ticket.passengerGender})`;
+  document.getElementById('ticketTravellers').textContent = ticket.seatCount;
+  document.getElementById('ticketPayment').textContent = ticket.paymentText;
+  document.getElementById('ticketTotal').textContent = `₹${ticket.total}`;
+  document.getElementById('ticketOverlay').style.display = 'flex';
+}
+
+function closeTicket() {
+  document.getElementById('ticketOverlay').style.display = 'none';
+}
+
+function downloadTicket() {
+  const ticket = bookingState.confirmedTicket;
+  if (!ticket) return;
+  const booking = ticket.booking;
+  const ticketType = ticket.bookingType === 'flight' ? 'Flight' : 'Train';
+  const ticketHtml = `<!doctype html><html><head><meta charset="UTF-8"><title>${ticketType} Ticket ${ticket.ticketNumber}</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#0f172a}main{max-width:680px;margin:auto;border:1px solid #dbeafe;border-radius:16px;padding:24px}h1{color:#2563eb}p{padding:8px 0;border-bottom:1px solid #e2e8f0}</style></head><body><main><h1>Cheap &amp; Best Trip</h1><p><strong>${ticketType}:</strong> ${ticket.ticketNumber}</p><p><strong>Operator:</strong> ${ticket.bookingType === 'flight' ? booking.airline + ' ' + booking.number : booking.name + ' #' + booking.number}</p><p><strong>Route:</strong> ${booking.from} &rarr; ${booking.to}</p><p><strong>Passenger:</strong> ${ticket.passengerName}</p><p><strong>Class:</strong> ${ticket.travelClass}</p><p><strong>Travellers:</strong> ${ticket.seatCount}</p><p><strong>Payment:</strong> ${ticket.paymentText}</p><p><strong>Total paid:</strong> ₹${ticket.total}</p></main></body></html>`;
+  const blob = new Blob([ticketHtml], { type: 'text/html' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${ticketType.toLowerCase()}-ticket-${ticket.ticketNumber}.html`;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function getClassFare(className) {
@@ -711,7 +917,7 @@ function searchFlights() {
         '<div class="flight-price-section">' +
           '<div class="flight-price">' + flight.price + '</div>' +
           '<div class="flight-price-per">per adult</div>' +
-          '<button class="btn btn-primary btn-sm" style="margin-top:8px">Book Now</button>' +
+          '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="startFlightBooking(' + i + ')">Book Now</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -776,6 +982,11 @@ function searchHotels() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+  const runningDate = document.getElementById('runningDate');
+  if (runningDate && !runningDate.value) {
+    runningDate.value = new Date().toISOString().split('T')[0];
+  }
+
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const parent = this.closest('.filter-bar');

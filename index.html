@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-<base target="_blank">
+  <base target="_blank">
 </head>
 <body>
 
@@ -38,10 +38,10 @@
     </a>
     <ul class="nav-links">
       <li><a href="#" class="active">Book Ticket</a></li>
-      <li><a href="#">PNR Status</a></li>
-      <li><a href="#">Running Status</a></li>
-      <li><a href="#">Holidays</a></li>
-      <li><a href="#">Tourism</a></li>
+      <li><a href="pnr.html" target="_self">PNR Status</a></li>
+      <li><a href="running-status.html" target="_self">Running Status</a></li>
+      <li><a href="holidays.html" target="_self">Holidays</a></li>
+      <li><a href="tourism.html" target="_self">Tourism</a></li>
     </ul>
     <div class="nav-actions">
       <button class="btn btn-ghost" id="loginBtn" onclick="openLogin()">Login</button>
@@ -220,6 +220,45 @@
       </div>
     </div>
   </div>
+</section>
+
+<section class="service-section" id="railServices">
+  <div class="service-heading">
+    <div>
+      <span class="eyebrow">Railway tools</span>
+      <h2>Check PNR &amp; live train status</h2>
+      <p>Enter your details to check the latest available railway information.</p>
+    </div>
+    <span class="api-badge"><span class="status-dot"></span> API-ready</span>
+  </div>
+  <div class="service-grid">
+    <article class="service-panel" id="pnrPanel">
+      <div class="service-panel-header">
+        <div class="service-icon blue">&#128196;</div>
+        <div><h3>PNR Status</h3><p>Check passenger and berth confirmation.</p></div>
+      </div>
+      <form onsubmit="checkPNR(event)">
+        <label class="form-label" for="pnrNumber">10-digit PNR number</label>
+        <div class="inline-form"><input class="form-input" id="pnrNumber" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Example: 6512345678" required><button class="btn btn-primary" type="submit">Check PNR</button></div>
+      </form>
+      <div class="service-result" id="pnrResult" aria-live="polite"><span class="result-muted">Your PNR result will appear here.</span></div>
+    </article>
+    <article class="service-panel" id="runningPanel">
+      <div class="service-panel-header">
+        <div class="service-icon orange">&#128642;</div>
+        <div><h3>Running Status</h3><p>Track a train by number and journey date.</p></div>
+      </div>
+      <form onsubmit="checkRunningStatus(event)">
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label" for="runningTrainNumber">Train number</label><input class="form-input" id="runningTrainNumber" inputmode="numeric" maxlength="5" placeholder="Example: 12951" required></div>
+          <div class="form-group"><label class="form-label" for="runningDate">Journey date</label><input class="form-input" id="runningDate" type="date" required></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Track Train</button>
+      </form>
+      <div class="service-result" id="runningResult" aria-live="polite"><span class="result-muted">Live location and delay will appear here.</span></div>
+    </article>
+  </div>
+  <p class="service-note">Live railway results require a licensed railway data provider and a server-side API key. This page uses demo fallback data until those endpoints are configured.</p>
 </section>
 
 <!-- ============================================
@@ -406,6 +445,31 @@
       <div class="feature-desc">Get notified about PNR status, delays, and platform changes</div>
     </div>
   </div>
+
+  <section class="travel-section" id="holidaySection">
+    <div class="section-header"><div><span class="eyebrow">Plan better</span><h2 class="section-title">Holiday escapes</h2></div><span class="section-link">Curated trips</span></div>
+    <div class="holiday-grid">
+      <article class="holiday-card holiday-goa"><div><span class="holiday-tag">Beach break</span><h3>Goa long weekend</h3><p>3 nights from Mumbai with stays, transfers and local experiences.</p><strong>From ₹12,999</strong></div></article>
+      <article class="holiday-card holiday-dubai"><div><span class="holiday-tag">International</span><h3>Dubai city lights</h3><p>Visa support, hotel, airport transfer and desert safari options.</p><strong>From ₹38,500</strong></div></article>
+      <article class="holiday-card holiday-kashmir"><div><span class="holiday-tag">Mountains</span><h3>Kashmir valley</h3><p>Houseboat stay, sightseeing and comfortable transfers for 5 days.</p><strong>From ₹21,999</strong></div></article>
+      <article class="holiday-card holiday-kerala"><div><span class="holiday-tag">Backwaters</span><h3>Kerala slow escape</h3><p>Houseboat nights, tea hills and coastal food across 6 days.</p><strong>From ₹24,999</strong></div></article>
+      <article class="holiday-card holiday-rajasthan"><div><span class="holiday-tag">Heritage</span><h3>Rajasthan royal trail</h3><p>Jaipur, Jodhpur and Udaipur with forts, markets and desert views.</p><strong>From ₹19,999</strong></div></article>
+      <article class="holiday-card holiday-bali"><div><span class="holiday-tag">Island life</span><h3>Bali discovery</h3><p>Temple visits, rice terraces and beach time with hotel options.</p><strong>From ₹44,500</strong></div></article>
+    </div>
+  </section>
+
+  <section class="travel-section" id="visaSection">
+    <div class="section-header"><div><span class="eyebrow">International tourism</span><h2 class="section-title">Visa procedure guides</h2></div><span class="section-link">Step-by-step help</span></div>
+    <div class="visa-grid">
+      <article class="visa-card"><div class="visa-flag">AE</div><div><h3>Dubai / UAE</h3><p>Tourist visa guidance for Indian passport holders.</p><button class="btn btn-outline" onclick="openVisaGuide('UAE')">View procedure</button></div></article>
+      <article class="visa-card"><div class="visa-flag">TH</div><div><h3>Thailand</h3><p>Prepare documents and understand the entry process.</p><button class="btn btn-outline" onclick="openVisaGuide('Thailand')">View procedure</button></div></article>
+      <article class="visa-card"><div class="visa-flag">SG</div><div><h3>Singapore</h3><p>Application checklist, processing and arrival steps.</p><button class="btn btn-outline" onclick="openVisaGuide('Singapore')">View procedure</button></div></article>
+      <article class="visa-card"><div class="visa-flag">MY</div><div><h3>Malaysia</h3><p>Prepare the online entry and travel document checklist.</p><button class="btn btn-outline" onclick="openVisaGuide('Malaysia')">View procedure</button></div></article>
+      <article class="visa-card"><div class="visa-flag">LK</div><div><h3>Sri Lanka</h3><p>Understand ETA application and arrival requirements.</p><button class="btn btn-outline" onclick="openVisaGuide('Sri Lanka')">View procedure</button></div></article>
+      <article class="visa-card"><div class="visa-flag">MV</div><div><h3>Maldives</h3><p>Review arrival visa documents and island travel steps.</p><button class="btn btn-outline" onclick="openVisaGuide('Maldives')">View procedure</button></div></article>
+    </div>
+    <p class="service-note">Visa rules, fees and processing times change. Always verify the final requirement on the destination embassy or immigration website before applying.</p>
+  </section>
 </main>
 
 <!-- ============================================
@@ -546,7 +610,7 @@
 
     <div class="booking-step" id="bookingStep1">
       <div class="form-group">
-        <label class="form-label">Choose Class</label>
+        <label class="form-label" id="bookingClassLabel">Choose Class</label>
         <select id="bookingClassSelect" class="form-input" onchange="changeBookingClass(event)"></select>
       </div>
       <div class="form-group">
@@ -575,7 +639,7 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Seats</label>
+        <label class="form-label" id="bookingSeatsLabel">Seats</label>
         <div class="seat-counter">
           <button type="button" onclick="updateBookingSeats(-1)">−</button>
           <span id="bookingSeatCount">1</span>
@@ -696,6 +760,42 @@
       </div>
       <button type="button" class="btn btn-primary btn-lg" onclick="confirmBooking()">Pay Now</button>
     </div>
+  </div>
+</div>
+
+<div id="ticketOverlay" class="booking-overlay" style="display:none">
+  <div class="booking-modal ticket-modal">
+    <button class="close-btn" aria-label="Close ticket" onclick="closeTicket()">&times;</button>
+    <div class="booking-header">
+      <div class="ticket-success">Booking confirmed</div>
+      <div class="booking-train-info">
+        <div id="ticketType" class="booking-train-name">Travel ticket</div>
+        <div id="ticketNumber" class="booking-train-route"></div>
+      </div>
+    </div>
+    <div class="booking-summary ticket-summary">
+      <div class="booking-summary-line"><span>Operator</span><strong id="ticketOperator"></strong></div>
+      <div class="booking-summary-line"><span>Route</span><strong id="ticketRoute"></strong></div>
+      <div class="booking-summary-line"><span>Passenger</span><strong id="ticketPassenger"></strong></div>
+      <div class="booking-summary-line"><span>Class</span><strong id="ticketClass"></strong></div>
+      <div class="booking-summary-line"><span>Travellers</span><strong id="ticketTravellers"></strong></div>
+      <div class="booking-summary-line"><span>Payment</span><strong id="ticketPayment"></strong></div>
+      <div class="booking-summary-total"><span>Total paid</span><strong id="ticketTotal"></strong></div>
+    </div>
+    <div class="ticket-actions">
+      <button type="button" class="btn btn-primary btn-lg" onclick="downloadTicket()">Download Ticket</button>
+      <button type="button" class="btn btn-ghost" onclick="closeTicket()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="visaOverlay" class="login-overlay" style="display:none">
+  <div class="login-modal visa-modal">
+    <button class="close-btn" aria-label="Close visa guide" onclick="closeVisaGuide()">&times;</button>
+    <div class="login-branding"><div class="service-icon blue">&#127758;</div><div><h2 id="visaGuideTitle">Visa procedure</h2><p id="visaGuideSubtitle"></p></div></div>
+    <ol class="visa-steps" id="visaGuideSteps"></ol>
+    <div class="visa-warning">Check the destination immigration website for current eligibility, fees, insurance and passport validity rules before payment.</div>
+    <a class="btn btn-primary btn-lg" id="visaOfficialLink" href="#" rel="noopener">Open official immigration site</a>
   </div>
 </div>
 

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PNR Status - Cheap & Best Trip</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar"><div class="nav-container"><a class="logo" href="index.html"><span class="logo-icon">&#128642;</span>Cheap &amp; Best Trip</a><ul class="nav-links"><li><a href="index.html" target="_self">Book Ticket</a></li><li><a class="active" href="pnr.html" target="_self">PNR Status</a></li><li><a href="running-status.html" target="_self">Running Status</a></li><li><a href="holidays.html" target="_self">Holidays</a></li><li><a href="tourism.html" target="_self">Tourism</a></li></ul></div></nav>
+  <main class="page-main"><section class="page-hero"><span class="eyebrow">Railway tools</span><h1>Check PNR Status</h1><p>Get the latest passenger and berth confirmation details.</p></section><section class="service-section page-service"><article class="service-panel" id="pnrPanel"><div class="service-panel-header"><div class="service-icon blue">&#128196;</div><div><h3>PNR Status</h3><p>Enter your 10-digit PNR number.</p></div></div><form onsubmit="checkPNR(event)"><label class="form-label" for="pnrNumber">10-digit PNR number</label><div class="inline-form"><input class="form-input" id="pnrNumber" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="Example: 6512345678" required><button class="btn btn-primary" type="submit">Check PNR</button></div></form><div class="service-result" id="pnrResult" aria-live="polite"><span class="result-muted">Your PNR result will appear here.</span></div></article><p class="service-note">Live results are provided through the configured railway API backend.</p></section></main>
+  <script src="script.js"></script>
+</body>
+</html>

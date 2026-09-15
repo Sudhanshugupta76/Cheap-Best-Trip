@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Running Status - Cheap & Best Trip</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar"><div class="nav-container"><a class="logo" href="index.html"><span class="logo-icon">&#128642;</span>Cheap &amp; Best Trip</a><ul class="nav-links"><li><a href="index.html" target="_self">Book Ticket</a></li><li><a href="pnr.html" target="_self">PNR Status</a></li><li><a class="active" href="running-status.html" target="_self">Running Status</a></li><li><a href="holidays.html" target="_self">Holidays</a></li><li><a href="tourism.html" target="_self">Tourism</a></li></ul></div></nav>
+  <main class="page-main"><section class="page-hero"><span class="eyebrow">Railway tools</span><h1>Live Train Running Status</h1><p>Track your train by number and journey date.</p></section><section class="service-section page-service"><article class="service-panel" id="runningPanel"><div class="service-panel-header"><div class="service-icon orange">&#128642;</div><div><h3>Running Status</h3><p>Find the latest station and delay information.</p></div></div><form onsubmit="checkRunningStatus(event)"><div class="form-row-2"><div class="form-group"><label class="form-label" for="runningTrainNumber">Train number</label><input class="form-input" id="runningTrainNumber" inputmode="numeric" maxlength="5" placeholder="Example: 12951" required></div><div class="form-group"><label class="form-label" for="runningDate">Journey date</label><input class="form-input" id="runningDate" type="date" required></div></div><button class="btn btn-primary" type="submit">Track Train</button></form><div class="service-result" id="runningResult" aria-live="polite"><span class="result-muted">Live location and delay will appear here.</span></div></article><p class="service-note">Live results are provided through the configured railway API backend.</p></section></main>
+  <script src="script.js"></script>
+</body>
+</html>

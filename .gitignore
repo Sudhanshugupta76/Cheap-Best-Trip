@@ -1,0 +1,5 @@
+node_modules/
+.env
+trip-data.sqlite
+trip-data.sqlite-shm
+trip-data.sqlite-wal
